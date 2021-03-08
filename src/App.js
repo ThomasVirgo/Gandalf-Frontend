@@ -1,8 +1,10 @@
-import './App.css';
+import './CSS/App.css';
+import React from 'react';
+import Landing from './components/Landing';
 
 function App() {
   return (
-    <h1>Gandalf online card game...</h1>
+    <Landing/>
   );
 }
 
