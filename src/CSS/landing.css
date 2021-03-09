@@ -10,11 +10,12 @@
 
 h1{
     color: blanchedalmond;
+    text-align: center;
 }
 
 .entrance-container {
     background-color: blueviolet;
-    width: 300px;
+    width: 250px;
     padding: 20px;
     border-radius: 10px;
 }
@@ -26,10 +27,6 @@ h1{
     border-bottom: solid beige 5px;
     border-radius: 5px;
     padding: 5px;
-}
-
-.form-element:hover{
-    border-bottom: solid darkkhaki 5px;
 }
 
 .btn1{
