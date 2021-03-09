@@ -11,15 +11,18 @@ const Landing = () => {
     const [input, setInput] = useState({
         'code':'',
         'nickname':'',
+        'roomName':'',
     });
 
-
+    // this is ran once when the component mounts, setting up socket and applying what it needs to listen out for...
     useEffect(() => {
         const newSocket = io(ENDPOINT);
+        newSocket.on('message', (msg)=>{console.log(msg)});
         setSocket(newSocket);
-        return () => newSocket.disconnect();
-      }, []);
     
+        return () => newSocket.disconnect(); // clean up function runs when the component unmounts. 
+      }, []);
+
 
     function handleChange(event){
         setInput({
@@ -32,17 +35,22 @@ const Landing = () => {
         event.preventDefault();
         console.log(`${input.nickname} submitted code ${input.code}`);
         if (input.code && input.nickname){
-            socket.emit('game entrance', `${input.nickname} submitted code ${input.code}`)
-            setInput({
-                'code':'',
-                'nickname':'',
-            })
+            socket.emit('join game', input.code);
+            clearInput();
         }
     }
 
-    function createNewCode(){
+    function clearInput(){
+        setInput({
+            'code':'',
+            'nickname':'',
+        })
+    }
+
+    function createNewCode(event){
+        event.preventDefault();
         console.log('create a new code!')
-        socket.emit('new code', 'client created a new code');
+        socket.emit('new game', input.roomName);
     }
 
 
@@ -55,14 +63,20 @@ const Landing = () => {
                         <label htmlFor='nickname'>Name/Nickname:</label>
                         <input id='nickname' name='nickname' type='text' required onChange={handleChange} placeholder='enter a name or nickname'></input>
                     </div>
-                    <div id='form-element1' className='form-element'>
+                    <div id='form-element2' className='form-element'>
                         <label htmlFor='code'>Game code:</label>
-                        <input id='code' name='code' type='text' onChange={handleChange} placeholder='ask the host for code and enter here'></input>
+                        <input id='code' name='code' type='text' onChange={handleChange} placeholder='ask the host for code and enter here' required></input>
                     </div>
                     <input type='submit' value='enter game!' className='btn1'></input>
                 </form>
                 <hr/>
-                <button onClick={createNewCode} className='btn2'>Create new game</button>
+                <form id='new-room' className='new-room'>
+                    <div id='form-element3' className='form-element'>
+                        <label htmlFor='roomName'>Room Name:</label>
+                        <input id='roomName' name='roomName' type='text' onChange={handleChange} placeholder='enter a new room name' required></input>
+                    </div>
+                    <input type='submit' value='Create new game' className='btn2' onClick={createNewCode}></input>
+                </form>
             </div>
         </div>
     )
