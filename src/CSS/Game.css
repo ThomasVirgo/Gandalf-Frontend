@@ -8,6 +8,7 @@
         'table table table chat'
         'table table table chat';
     grid-gap: 10px;
+    grid-template-rows: 30vh 30vh 40vh;
 }
 
 .history{
@@ -16,8 +17,9 @@
 }
 
 .chat {
+    overflow: scroll;
     grid-area: chat;
-    background-color: darkcyan;
+    background-color: black;
 }
 
 .table {
