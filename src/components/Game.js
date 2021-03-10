@@ -22,12 +22,6 @@ const Game = ({socket,input,host}) => {
                 <Table socket = {socket} input = {input} host = {host}/>
             </div>
         </div>
-        // <div>
-        //     <h1>Game Page.</h1>
-        //     <h2>{socket.id}</h2>
-        //     <h2>{room || newRoom}</h2>
-        //     <h2>{nickname}</h2>
-        // </div>
     )
 }
 
