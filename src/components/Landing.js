@@ -1,27 +1,18 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import '../CSS/landing.css';
 const io = require('socket.io-client');
-const ENDPOINT = 'http://localhost:5000/';
+//const ENDPOINT = 'http://localhost:5000/';
+const ENDPOINT = 'https://Gandalf-Server.thomasvirgo.repl.co'; //hosting backend server on repl.it
 
 
-const Landing = () => {
+const Landing = ({socket}) => {
 
-    const [socket, setSocket] = useState();
 
     const [input, setInput] = useState({
         'code':'',
         'nickname':'',
         'roomName':'',
     });
-
-    // this is ran once when the component mounts, setting up socket and applying what it needs to listen out for...
-    useEffect(() => {
-        const newSocket = io(ENDPOINT);
-        newSocket.on('message', (msg)=>{console.log(msg)});
-        setSocket(newSocket);
-    
-        return () => newSocket.disconnect(); // clean up function runs when the component unmounts. 
-      }, []);
 
 
     function handleChange(event){
@@ -54,7 +45,7 @@ const Landing = () => {
     }
 
 
-    return (
+    return console.log(socket), (
         <div id='landing' className='landing-main'>
             <h1>Gandalf - The Card Game</h1>
             <div id='landing-container' className = 'entrance-container'>
