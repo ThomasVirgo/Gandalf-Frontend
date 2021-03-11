@@ -27,3 +27,8 @@
     height:100px;
     width: 130px;
 }
+
+.message-name{
+    color: black;
+    font-weight: bold;
+}

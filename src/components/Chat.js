@@ -18,9 +18,12 @@ const Chat = ({socket,input,host}) => {
 
     useEffect(()=>{
         setChatMessages(chatMessages => [...chatMessages, currentMessage]);
-        scrollToBottom();
-        console.log('use effect ran, chane to current message');
     }, [currentMessage])
+
+    useEffect(()=>{
+        scrollToBottom();
+        console.log('scrolled');
+    }, [chatMessages]);
     
     const messagesEndRef = useRef(null)
 
@@ -32,6 +35,11 @@ const Chat = ({socket,input,host}) => {
         setChatInput(event.target.value);
     }
 
+    function clearInput(){
+        setChatInput('');
+        document.getElementById('chatInput').value='';
+    }
+
     function sendMessage(event){
         event.preventDefault();
         scrollToBottom();
@@ -41,7 +49,7 @@ const Chat = ({socket,input,host}) => {
             "room": room
         }); //send the message to the server
         setCurrentMessage([nickname, chatInput, 0]);
-        scrollToBottom();
+        clearInput();
     }
 
     let myMessageStyle = {
@@ -79,7 +87,7 @@ const Chat = ({socket,input,host}) => {
                 <div ref={messagesEndRef} />
             </div>
             <form id='chat-message' onSubmit={sendMessage} className='send-message'>
-                <input type='text' onChange = {inputChange} required placeholder='add a message' className='chatInput'></input>
+                <input type='text' onChange = {inputChange} required placeholder='add a message' className='chatInput' id='chatInput'></input>
                 <input type='submit' value='Send it!' className='chatButton'></input>
             </form>
         </div>
