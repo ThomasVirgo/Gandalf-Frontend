@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
+import '../CSS/Chat.css';
 
 const Chat = ({socket,input,host}) => {
     const [chatInput, setChatInput] = useState('');
@@ -11,6 +12,8 @@ const Chat = ({socket,input,host}) => {
     useEffect(()=>{
         socket.on('chat message', ({nickname, message})=>{setCurrentMessage([nickname, message,1])})
         console.log('useEffect ran');
+
+        return () => {socket.off('chat message')};
     }, [socket])
 
     useEffect(()=>{
@@ -31,9 +34,6 @@ const Chat = ({socket,input,host}) => {
 
     function sendMessage(event){
         event.preventDefault();
-        // let messages  = getEntry('messages');
-        // messages.push([nickname,chatInput,0]);
-        // setEntry('messages', messages);
         scrollToBottom();
         socket.emit('message from client', {
             "message":chatInput,
@@ -68,8 +68,8 @@ const Chat = ({socket,input,host}) => {
 
     return (
         <div id='chat-container' className='chat-container'>
-            <h2>Chat</h2>
-            <div id='messages'>
+            <h2 className='chat-heading'>Chat</h2>
+            <div id='messages' className='messages'>
                 {chatMessages.map((message, index)=> (
                     <div key ={index} style = {styles[message[2]]}>
                         <div className='message-name'>{message[0]}:</div>
@@ -78,12 +78,11 @@ const Chat = ({socket,input,host}) => {
                 ))}
                 <div ref={messagesEndRef} />
             </div>
-            <form id='chat-message' onSubmit={sendMessage}>
-                <input type='text' onChange = {inputChange} required placeholder='add a message'></input>
-                <input type='submit' value='Send it!'></input>
+            <form id='chat-message' onSubmit={sendMessage} className='send-message'>
+                <input type='text' onChange = {inputChange} required placeholder='add a message' className='chatInput'></input>
+                <input type='submit' value='Send it!' className='chatButton'></input>
             </form>
         </div>
-
     )
 }
 

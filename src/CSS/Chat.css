@@ -1,0 +1,29 @@
+.chat-heading{
+    color: blueviolet;
+    text-align: center;
+}
+
+.messages{
+    overflow: scroll;
+    margin-bottom: 100px;
+    height: 55vh;
+}
+
+.send-message{
+    position: fixed;
+    margin-bottom: 0;
+    bottom: 0;
+    width: 100%;
+    height: 90px;
+}
+
+.chatInput{
+    height: 90px;
+    width: 25vw;
+    font-size: large;
+}
+
+.chatButton{
+    height:100px;
+    width: 130px;
+}
