@@ -26,9 +26,8 @@ function App() {
     console.log('initalised with useEffect...')
     // create a socket when the user opens page
     const newSocket = io(ENDPOINT);
-    newSocket.on('message', (msg)=>{console.log(msg)});
     newSocket.on('enter room', ()=>{enterRoom()});
-    newSocket.on('entrance error', (error) => {alert(error)});
+    newSocket.on('error', (error) => {alert(error)});
     setSocket(newSocket);
 
   },[])

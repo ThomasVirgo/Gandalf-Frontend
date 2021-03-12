@@ -7,7 +7,7 @@ const Chat = ({socket,input,host}) => {
     const [currentMessage, setCurrentMessage] = useState([]);
     let {nickname, room, newRoom} = input;
     if (host){room = newRoom} //so that only need to refer to room 
-
+    const messagesEndRef = useRef(null)
 
     useEffect(()=>{
         socket.on('chat message', ({nickname, message})=>{setCurrentMessage([nickname, message,1])})
@@ -25,9 +25,9 @@ const Chat = ({socket,input,host}) => {
         console.log('scrolled');
     }, [chatMessages]);
     
-    const messagesEndRef = useRef(null)
+    
 
-    const scrollToBottom = () => {
+    function scrollToBottom(){
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }
 
