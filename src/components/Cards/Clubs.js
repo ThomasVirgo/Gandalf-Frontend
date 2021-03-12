@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import '../../CSS/Cards.css';
 //pass in as props the value e.g. jack or ace etc...
-const Club = () => {
+const Club = ({value}) => {
 
     let cardColor, cardStyle;
     const [hidden, setHidden] = useState(false);
@@ -22,13 +22,13 @@ const Club = () => {
         <div className = 'card-container' style={cardColor} onClick={toggleHidden}>
             <div style={cardStyle}>
                 <div className='card-top'>
-                    <span>7</span><span>{'\u2663'}</span>
+                    <span>{value}</span><span>{'\u2663'}</span>
                 </div>
                 <div className='card-suit'>
                     <h1 className = 'h1-suit value-black'>{'\u2663'}</h1>
                 </div>
                 <div className='card-bottom'>
-                    <span>{'\u2663'}</span><span>7</span>
+                    <span>{'\u2663'}</span><span>{value}</span>
                 </div> 
             </div>
             

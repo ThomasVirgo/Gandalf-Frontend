@@ -12,7 +12,7 @@ const History = ({socket,input,host}) => {
 
     //listen for messages
     useEffect(()=>{
-        socket.on('user joined', (msg)=>{setMessage(msg)});
+        socket.on('user joined', (obj)=>{setMessage(obj.message)});
         socket.on('history', (msg)=>{setMessage(msg)});
         socket.on('user left', (msg)=>{setMessage(msg)});
     }, [socket, nickname, room])
