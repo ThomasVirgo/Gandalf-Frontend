@@ -1,0 +1,34 @@
+.card-container {
+    background-color: white;
+    width: 70px;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 3px;
+    border: white solid 3px;
+    box-shadow: 1px 1px 5px #000;
+}
+
+.card-container:hover {
+    border: black solid 3px;
+    cursor: pointer;
+}
+
+.h1-suit{
+    margin:0;
+}
+
+.card-bottom{
+    text-align: right;
+}
+
+.value-red {
+    color:red;
+}
+
+.value-black {
+    color: black;
+}
+
+span {
+    display: block;
+}
