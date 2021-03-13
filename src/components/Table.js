@@ -6,6 +6,9 @@ import Heart from './Cards/Hearts';
 import GameState from '../Classes/GameState';
 import User from '../Classes/User';
 import '../CSS/Table.css';
+import createDeck from '../Utils/CreateDeck';
+import dealCards from '../Utils/DealCards';
+
 
 const Table = ({socket,input,host}) => {
 
@@ -32,16 +35,26 @@ const Table = ({socket,input,host}) => {
             setGame(newState);
             console.log(newState);
         })
+
+        socket.on('game state change', (state) => {
+            setGame(state);
+            console.log(state);
+        })
     }, [game, socket]);
 
     //note this function is only accessible for the host.
-    function startGame(event){
-        //deal each user 4 cards
+    function startGame(){
+        //create a shuffled deck
+        let deck = createDeck();
 
+        //deal each user 4 cards
+        let newState = dealCards(game,deck);
+        setGame(newState);
 
         //emit the game state to the server
-        socket.emit('start game', game);
+        socket.emit('start game', newState);
         setGameStarted(true);
+        console.log(newState);
     }
 
     return (
