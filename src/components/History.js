@@ -14,7 +14,7 @@ const History = ({socket,input,host}) => {
     useEffect(()=>{
         socket.on('user joined', (obj)=>{setMessage(obj.message)});
         socket.on('history', (msg)=>{setMessage(msg)});
-        socket.on('user left', (msg)=>{setMessage(msg)});
+        socket.on('user left', (obj)=>{setMessage(obj.message)});
     }, [socket, nickname, room])
 
     //update the history array every time message changes

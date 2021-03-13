@@ -1,6 +1,7 @@
 class User{
-    constructor(nickname){
+    constructor(nickname, id){
         this.nickname = nickname;
+        this.id = id;
         this.points = 0;
         this.hand = [];
         this.numCards = 4;

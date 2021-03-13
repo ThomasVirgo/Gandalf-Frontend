@@ -1,9 +1,9 @@
 import User from './User';
 
 class GameState{
-    constructor(room, initialUser){
+    constructor(room, nickname, id){
         this.room=room;
-        this.users = [new User(initialUser)];
+        this.users = [new User(nickname, id)];
         this.deck = [];
         this.pile = [];
         this.count = 0;

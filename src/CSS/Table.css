@@ -1,0 +1,39 @@
+.table-container{
+    width:100%;
+    height:100%;
+    display: grid;
+    grid-gap: 0px;
+    grid-template-rows: repeat(6,auto);
+    grid-template-columns: repeat(6,auto);
+    /* note you cannot have a grid area (including empties) which is not a rectangle!! */
+    grid-template-areas:
+        'e1 e1 m m m m m m e2 e2'       
+        'e7 e7 e7 e7 e7 e7 e7 e7 e7 e7'       
+        'e7 e7 e7 e7 e7 e7 e7 e7 e7 e7'       
+        'e7 e7 e7 e7 e7 e7 e7 e7 e7 e7'            
+        'e5 e5 e5 e5 d p e6 e6 e6 e6'       
+        'e5 e5 e5 e5 d p e6 e6 e6 e6'       
+        'e8 e8 e8 e8 e8 e8 e8 e8 e8 e8'       
+        'e8 e8 e8 e8 e8 e8 e8 e8 e8 e8'       
+        'e8 e8 e8 e8 e8 e8 e8 e8 e8 e8'             
+        'e3 e3 e3 c1 c2 c3 c4 e4 e4 e4';       
+}
+
+.card1 {grid-area: c1;}
+.card2 {grid-area: c2;}
+.card3 {grid-area: c3;}
+.card4 {grid-area: c4;}
+
+
+.main-message {
+    grid-area: m;
+    background-color: cadetblue;
+}
+
+.deck {
+    grid-area: d;
+}
+
+.pile {
+    grid-area: p;
+}
