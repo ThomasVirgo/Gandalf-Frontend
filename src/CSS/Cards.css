@@ -1,8 +1,8 @@
 .card-container {
     background-color: white;
-    width: 70px;
+    width: 50px;
     margin: 0px;
-    padding: 10px;
+    padding: 5px;
     border-radius: 3px;
     border: white solid 3px;
     box-shadow: 1px 1px 5px #000;
@@ -11,6 +11,14 @@
 .card-container:hover {
     border: black solid 3px;
     cursor: pointer;
+}
+
+.card-top{
+    font-size: small;
+}
+
+.card-bottom{
+    font-size: small;
 }
 
 .h1-suit{
@@ -27,8 +35,4 @@
 
 .value-black {
     color: black;
-}
-
-span {
-    display: block;
 }

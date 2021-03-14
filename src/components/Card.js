@@ -40,7 +40,7 @@ const Card = ({value, suit}) => {
                     <span>{value}</span><span>{suitSymbol}</span>
                 </div>
                 <div className='card-suit'>
-                    <h1 className = 'h1-suit value-black' style={textStyle}>{suitSymbol}</h1>
+                    <h3 className = 'h1-suit value-black' style={textStyle}>{suitSymbol}</h3>
                 </div>
                 <div className='card-bottom' style={textStyle}>
                     <span>{suitSymbol}</span><span>{value}</span>
