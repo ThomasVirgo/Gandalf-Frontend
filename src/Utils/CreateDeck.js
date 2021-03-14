@@ -15,7 +15,7 @@ const createDeck = () => {
     let deck = [];
     for (let i=0; i<suits.length; i++){
         for (let j=0; j<values.length; j++){
-            deck.push(new Card(values[j], suits[i]));
+            deck.push(new Card(values[j], suits[i], true));
         }
     }
     return shuffleArray(deck);

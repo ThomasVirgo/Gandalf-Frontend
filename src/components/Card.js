@@ -1,7 +1,7 @@
-import React, {useState} from 'react';
+import React from 'react';
 import '../CSS/Cards.css';
 //pass in as props the value e.g. jack or ace etc...
-const Card = ({value, suit}) => {
+const Card = ({value, suit, hidden}) => {
 
     let symbols = {
         'diamonds':'\u2666',
@@ -19,7 +19,6 @@ const Card = ({value, suit}) => {
     }
 
     let cardColor, cardStyle;
-    const [hidden, setHidden] = useState(false);
 
     if (hidden){
         cardColor = {backgroundColor:'darkRed'};
@@ -29,12 +28,8 @@ const Card = ({value, suit}) => {
         cardStyle = {};
     }
 
-    function toggleHidden(){
-        setHidden(!hidden);
-    };
-
     return (
-        <div className = 'card-container' style={cardColor} onClick={toggleHidden}>
+        <div className = 'card-container' style={cardColor}>
             <div style={cardStyle}>
                 <div className='card-top' style={textStyle}>
                     <span>{value}</span><span>{suitSymbol}</span>

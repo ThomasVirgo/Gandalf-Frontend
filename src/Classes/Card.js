@@ -1,7 +1,8 @@
 class Card{
-    constructor(value,suit){
+    constructor(value,suit,hidden){
         this.value = value;
         this.suit = suit;
+        this.hidden = hidden;
     }
 }
 

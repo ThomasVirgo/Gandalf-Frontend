@@ -4,7 +4,7 @@ class User{
         this.id = id;
         this.points = 0;
         this.hand = [];
-        this.numCards = 4;
+        this.ready = false;
     }
 
     updatePoints(x){

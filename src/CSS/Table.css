@@ -10,7 +10,8 @@
         'instruction instruction instruction'      
         'Player3 Player3 Player3'      
         'Player2 Deck Player4'      
-        'OwnCards OwnCards OwnCards';     
+        'OwnCards OwnCards OwnCards'     
+        'playButtons playButtons playButtons';     
 }
 
 .myCards {
@@ -46,6 +47,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.playButtons {
+    grid-area: playButtons;
+    background-color: blueviolet;
 }
 
 .rotate-clockwise{

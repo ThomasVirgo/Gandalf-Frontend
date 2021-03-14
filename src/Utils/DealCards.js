@@ -5,7 +5,8 @@ const dealCards = (currentState, deck) => {
         let cards = [];
         // give them 4 cards from the deck, and remove these from deck. 
         for (let j=0; j<4; j++){
-            cards.push(deck.pop());
+            let currCard = deck.pop();
+            cards.push(currCard);
         }
         newState.users[i].hand = cards;
     }
