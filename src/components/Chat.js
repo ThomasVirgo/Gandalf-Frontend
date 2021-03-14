@@ -11,7 +11,7 @@ const Chat = ({socket,input,host}) => {
 
     useEffect(()=>{
         socket.on('chat message', ({nickname, message})=>{setCurrentMessage([nickname, message,1])})
-        console.log('useEffect ran');
+        
 
         return () => {socket.off('chat message')};
     }, [socket])
@@ -22,7 +22,6 @@ const Chat = ({socket,input,host}) => {
 
     useEffect(()=>{
         scrollToBottom();
-        console.log('scrolled');
     }, [chatMessages]);
     
     
