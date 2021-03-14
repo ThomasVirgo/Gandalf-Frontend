@@ -61,10 +61,3 @@
     background-color: cadetblue;
 }
 
-.deck {
-    grid-area: d;
-}
-
-.pile {
-    grid-area: p;
-}

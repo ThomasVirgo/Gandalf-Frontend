@@ -11,7 +11,7 @@ function shuffleArray(array) {
 
 const createDeck = () => {
     let values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-    let suits = ['Spades', 'Hearts', 'Diamonds', 'Clubs'];
+    let suits = ['spades', 'hearts', 'diamonds', 'clubs'];
     let deck = [];
     for (let i=0; i<suits.length; i++){
         for (let j=0; j<values.length; j++){
