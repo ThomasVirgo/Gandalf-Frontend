@@ -23,10 +23,11 @@ const Table = ({socket,input,host}) => {
     
     const [game, setGame] = useState(new GameState(room, nickname, socket.id));
     const [hiddenCards, setHiddenCards] = useState({
-        "clientCards":[true,false,true,false],
+        "clientCards":[true,true,true,true],
         "player2":[true,true,true,true],
         "player3":[true,true,true,true],
         "player4":[true,true,true,true],
+        "deck": true,
     });
     
     console.log('rendered. game state is: ', game);
@@ -59,6 +60,32 @@ const Table = ({socket,input,host}) => {
             setGame(state);
         })
     }, [game, socket]);
+
+    // change which cards are hidden according to the game state
+    useEffect(()=>{
+        if (game.period === 'look at two cards'){
+            console.log('set hidden cards to show first two!');
+            setHiddenCards(hiddenCards => {
+                return {
+                    ...hiddenCards,
+                "clientCards":[false, false, true, true] 
+                }
+            });
+        }
+
+        if (game.period === 'turns started'){
+            console.log('turns started, flipped cards back over...');
+            setHiddenCards(hiddenCards=>{
+                return {
+                    ...hiddenCards,
+                    "clientCards":[true,true,true,true]
+                }
+            })
+        }
+        
+    }, [game])
+
+    
 
     
 
@@ -106,6 +133,24 @@ const Table = ({socket,input,host}) => {
         }
     }
 
+    function takeFromDeck(){
+        console.log('took a card from the deck');
+
+        //show player the card
+
+        //give them the choice of swapping it out for another card or playing onto pile
+
+        //if swap out, end turn
+
+        //else need to check if that card has special effect (maybe implement this later)
+    }
+
+    function takeFromPile(){
+        console.log('took a card from the pile');
+
+        //same as above
+    }
+
     function endTurn(){
         let newState = game;
         if (newState.turn === 3){
@@ -147,7 +192,7 @@ const Table = ({socket,input,host}) => {
 
             <div id='center-cards' className='center-cards'>
                 <div className='deck'>
-                    {deckTop&&<Card value={deckTop.value} suit = {deckTop.suit} hidden = {deckTop.hidden}></Card>}
+                    {deckTop&&<Card value={deckTop.value} suit = {deckTop.suit} hidden = {hiddenCards.deck}></Card>}
                 </div>
                 <div className='pile'>
                     {pileTop&&<Card value={pileTop.value} suit={pileTop.suit} hidden = {false}></Card>}
@@ -165,10 +210,10 @@ const Table = ({socket,input,host}) => {
 
             <div className='playButtons'>
                 {game.period === 'look at two cards' && <button onClick = {readyUp}>Ready</button>}
-                {false && <button>Take card from deck</button>}
-                {false && <button>Take card from pile</button>}
-                {false && <button>Play a Double</button>}
-                {false && <button onClick={endTurn}>End Turn</button>}
+                {game.period === 'turns started' && <button onClick = {takeFromDeck}>Take card from deck</button>}
+                {game.period === 'turns started' && <button onClick = {takeFromPile}>Take card from pile</button>}
+                {game.period === 'turns started' && <button>Play a Double</button>}
+                {game.period === 'turns started' && <button onClick={endTurn}>End Turn</button>}
             </div>
         </div>
     )
