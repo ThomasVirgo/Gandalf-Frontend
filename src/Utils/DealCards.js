@@ -1,6 +1,6 @@
 const dealCards = (currentState, deck) => {
-    let users = currentState.users;
-    let newState = currentState;
+    let users = [...currentState.users];
+    let newState = {...currentState};
     for (let i=0; i<users.length; i++){
         let cards = [];
         // give them 4 cards from the deck, and remove these from deck. 

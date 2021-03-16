@@ -8,8 +8,7 @@ class GameState{
         this.users = [new User(nickname, id)];
         this.deck = [];
         this.pile = [];
-        this.count = 0;
-        this.show2 = true; //becomes false once each player has looked at 2 cards.
+        this.period = 'waiting for players';
     }
 }
 

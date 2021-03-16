@@ -25,20 +25,30 @@ const Table = ({socket,input,host}) => {
 
     let users = game.users;
     let myIndex = users.findIndex(user => user.id===socket.id);
+    console.log('rendered. game state is: ', game);
 
     useEffect(()=>{
+        console.log('ran use effect for socket connections');
         socket.on('user joined', (obj)=>{
-            let newState = game;
-            newState.users.push(new User(obj.nickname, obj.id));
-            setGame(newState);
+            // let newState = game;
+            // newState.users.push(new User(obj.nickname, obj.id));
+            console.log(`${obj.nickname} has joined the game`);
+            let newUsers = [...game.users,new User(obj.nickname, obj.id)];
+            setGame({
+                ...game,
+                "users": newUsers
+            })
         })
 
         //remove user from gamestate if they leave
         socket.on('user left', (obj)=>{
-            let newState = game;
-            let index = newState.users.findIndex((entry)=>entry.id === obj.id);
-            newState.users.splice(index,1);
-            setGame(newState);
+            let newUsers = [...game.users];
+            let index = newUsers.findIndex((entry)=>entry.id === obj.id);
+            newUsers.splice(index,1);
+            setGame({
+                ...game,
+                "users": newUsers
+            });
         })
 
         socket.on('game state change', (state) => {
@@ -55,11 +65,13 @@ const Table = ({socket,input,host}) => {
 
         //deal each user 4 cards
         let newState = dealCards(game,deck);
-        newState.message = 'Remember the two cards that are face up. Then click ready!'
+        newState.message = 'Remember the two cards that are face up. Then click ready!';
+        newState.period = 'look at two cards';
         setGame(newState);
 
         //emit the game state to the server
         socket.emit('start game', newState);
+        console.log('host started game');
     }
 
     function readyUp(){
@@ -131,7 +143,7 @@ const Table = ({socket,input,host}) => {
             
             <div className='main-message'>
                 <div id='host-start-button'>
-                    {host && <button onClick = {startGame}>Start Game</button>}
+                    {host && game.period === 'waiting for players' && <button onClick = {startGame}>Start Game</button>}
                 </div>
                 <div id='instruction-message' className='instruction'>
                     <h4>{game.message}</h4>
@@ -139,11 +151,11 @@ const Table = ({socket,input,host}) => {
             </div>
 
             <div className='playButtons'>
-                {<button onClick = {readyUp}>Ready</button>}
-                {<button>Take card from deck</button>}
-                {<button>Take card from pile</button>}
-                {<button>Play a Double</button>}
-                {<button onClick={endTurn}>End Turn</button>}
+                {false && <button onClick = {readyUp}>Ready</button>}
+                {false && <button>Take card from deck</button>}
+                {false && <button>Take card from pile</button>}
+                {false && <button>Play a Double</button>}
+                {false && <button onClick={endTurn}>End Turn</button>}
             </div>
         </div>
     )
