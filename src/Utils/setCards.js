@@ -1,14 +1,10 @@
 const setCardsToCurrentState = (game, socket) => {
-    let users = game.users;
+    let users = [...game.users];
     let myIndex = users.findIndex(user => user.id===socket.id);
 
     // get your own cards
     let idxList = [0,1,2,3];
     let myCards = users[myIndex].hand;
-    if (game.show2 && myCards.length>0){
-        myCards[0].hidden=false;
-        myCards[1].hidden=false;
-    };
 
     idxList.splice(myIndex,1);
 

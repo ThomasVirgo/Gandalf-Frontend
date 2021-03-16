@@ -1,10 +1,11 @@
 import React from 'react';
 import Card from '../Card';
 
-const Player3Cards = ({cards}) => {
-    let elements = (cards.map((card,index)=><Card value = {card.value} suit = {card.suit} hidden = {card.hidden} key={index}/>))
+const Player3Cards = ({cards, hiddenCards}) => {
+    let hiddenArr = hiddenCards.player3;
+    let elements = (cards.map((card,index)=><Card value = {card.value} suit = {card.suit} hidden = {hiddenArr[index]} key={index}/>))
     return (
-        <div style = {{display:'flex'}}>
+        <div>
             {elements}
         </div>
     )

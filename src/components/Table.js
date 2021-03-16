@@ -18,13 +18,17 @@ const Table = ({socket,input,host}) => {
     let {nickname, room, newRoom} = input;
     if (host){room = newRoom} //so that only need to refer to room 
 
-    // change to a single state!
+    
     // remember that calling setState will re render the whole component...
     
     const [game, setGame] = useState(new GameState(room, nickname, socket.id));
-
-    let users = game.users;
-    let myIndex = users.findIndex(user => user.id===socket.id);
+    const [hiddenCards, setHiddenCards] = useState({
+        "clientCards":[true,false,true,false],
+        "player2":[true,true,true,true],
+        "player3":[true,true,true,true],
+        "player4":[true,true,true,true],
+    });
+    
     console.log('rendered. game state is: ', game);
 
     useEffect(()=>{
@@ -67,6 +71,8 @@ const Table = ({socket,input,host}) => {
         let newState = dealCards(game,deck);
         newState.message = 'Remember the two cards that are face up. Then click ready!';
         newState.period = 'look at two cards';
+
+        //need to show each player two cards
         setGame(newState);
 
         //emit the game state to the server
@@ -75,8 +81,14 @@ const Table = ({socket,input,host}) => {
     }
 
     function readyUp(){
-        let newState = game;
-        newState.users[myIndex].ready=true;
+        let myUsers = [...game.users];
+        let index = myUsers.findIndex((entry)=>entry.id === socket.id);
+        myUsers[index].ready=true;
+        let newState = {
+            ...game,
+            "users": myUsers 
+        }
+        setGame(newState); // this new state in game variable is only accessible on the NEXT render!
         socket.emit('state change', newState);
         checkAllReady(newState);
         console.log('ran ready up function')
@@ -84,14 +96,13 @@ const Table = ({socket,input,host}) => {
 
     function checkAllReady(state){
         let allReady = state.users.every((user)=>user.ready);
-        setGame(state); // this new state in game variable is only accessible on the NEXT render!
         if (allReady){
-          let newState = state;
-          newState.message = `everyones ready, it is ${newState.users[newState.turn].nickname}'s turn`;
-          socket.emit('state change', newState);
-          console.log('ran check all ready, startTurns = true')
+          state.message = `everyones ready, it is ${state.users[state.turn].nickname}'s turn`;
+          state.period = 'turns started';
+          socket.emit('state change', state);
+          console.log('ran check all ready, turns started')
         } else{
-          console.log('ran check all ready, startTurns = false')  
+          console.log('ran check all ready, turns not strated')  
         }
     }
 
@@ -108,28 +119,30 @@ const Table = ({socket,input,host}) => {
 
     // set the cards in game to the current game state;
     let {myCards,player2Cards,player2Name,player3Cards,player3Name,player4Cards,player4Name,deckTop,pileTop}=setCardsToCurrentState(game,socket);
+    console.log('my cards are: ', myCards);
+    console.log('their cards are: ', player2Cards);
 
     //create component for each players hand
     return (
         <div className='table-container'>
             <div id='host-cards' className='myCards'>
                 <div>{nickname}</div>
-                <ClientCards cards={myCards}/>
+                <ClientCards cards={myCards} hiddenCards= {hiddenCards}/>
             </div>
 
             <div id='player2' className='player2'>
                 {player2Name!==''&&<div>{player2Name}</div>}
-                <Player2Cards cards={player2Cards}/>
+                <Player2Cards cards={player2Cards} hiddenCards= {hiddenCards}/>
             </div>
 
             <div id='player3' className='player3'>
                 {player3Name!==''&&<div>{player3Name}</div>}
-                <Player3Cards cards={player3Cards}/>
+                <Player3Cards cards={player3Cards} hiddenCards= {hiddenCards}/>
             </div>
 
             <div id='player4' className='player4'>
                 {player4Name!==''&&<div>{player4Name}</div>}
-                <Player4Cards cards={player4Cards}/>
+                <Player4Cards cards={player4Cards} hiddenCards= {hiddenCards}/>
             </div>
 
             <div id='center-cards' className='center-cards'>
@@ -151,7 +164,7 @@ const Table = ({socket,input,host}) => {
             </div>
 
             <div className='playButtons'>
-                {false && <button onClick = {readyUp}>Ready</button>}
+                {game.period === 'look at two cards' && <button onClick = {readyUp}>Ready</button>}
                 {false && <button>Take card from deck</button>}
                 {false && <button>Take card from pile</button>}
                 {false && <button>Play a Double</button>}
