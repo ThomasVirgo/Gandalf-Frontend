@@ -10,6 +10,7 @@ import Player2Cards from './Hands/Player2';
 import Player3Cards from './Hands/Player3';
 import Player4Cards from './Hands/Player4';
 import setCardsToCurrentState from '../Utils/setCards';
+import {isMyTurn} from '../Utils/gameStateFunctions';
 
 
 
@@ -137,12 +138,35 @@ const Table = ({socket,input,host}) => {
         console.log('took a card from the deck');
 
         //show player the card
+        setHiddenCards(hiddenCards=>{
+            return {
+                ...hiddenCards,
+                "deck":false
+            }
+        });
+        //they then get option to play this card straight to the pile
+    }
 
-        //give them the choice of swapping it out for another card or playing onto pile
-
-        //if swap out, end turn
-
-        //else need to check if that card has special effect (maybe implement this later)
+    function playCardToPile(){
+        //pop card from the deck
+        let newDeck = [...game.deck];
+        let newPile = [...game.pile];
+        let cardPlayed = newDeck.pop();
+        socket.emit('card played', `${nickname} played the ${cardPlayed.value} of ${cardPlayed.suit}`);
+        newPile.push(cardPlayed);
+        let newState = {
+            ...game,
+            "deck":newDeck,
+            "pile":newPile
+        }
+        setHiddenCards({
+            ...hiddenCards,
+            "deck":true
+        })
+        endTurn(newState);
+        //add it to the pile
+        //update the game state, and send to everyone
+        //update hidden cards so can no longer see the top of deck
     }
 
     function takeFromPile(){
@@ -151,13 +175,14 @@ const Table = ({socket,input,host}) => {
         //same as above
     }
 
-    function endTurn(){
-        let newState = game;
-        if (newState.turn === 3){
+    function endTurn(newState){
+        //this function takes the adpated state and increments the turn and emits new state to all players. 
+        if (newState.turn === newState.users.length-1){
             newState.turn = 0;
         } else {
             newState.turn = newState.turn + 1;  
         }
+        newState.message = `${newState.users[newState.turn].nickname}'s turn!`
         setGame(newState);
         socket.emit('state change', newState);
     }
@@ -210,10 +235,11 @@ const Table = ({socket,input,host}) => {
 
             <div className='playButtons'>
                 {game.period === 'look at two cards' && <button onClick = {readyUp}>Ready</button>}
-                {game.period === 'turns started' && <button onClick = {takeFromDeck}>Take card from deck</button>}
-                {game.period === 'turns started' && <button onClick = {takeFromPile}>Take card from pile</button>}
-                {game.period === 'turns started' && <button>Play a Double</button>}
-                {game.period === 'turns started' && <button onClick={endTurn}>End Turn</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && <button onClick = {takeFromDeck}>Take card from deck</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && <button onClick = {takeFromPile}>Take card from pile</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && <button>Play a Double</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && <button onClick={endTurn}>End Turn</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && <button onClick={playCardToPile}>Play Straight to Pile</button>}
             </div>
         </div>
     )
