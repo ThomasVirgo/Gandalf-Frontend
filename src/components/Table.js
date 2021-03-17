@@ -86,10 +86,6 @@ const Table = ({socket,input,host}) => {
         
     }, [game])
 
-    
-
-    
-
     //note this function is only accessible for the host.
     function startGame(){
         //create a shuffled deck
@@ -144,7 +140,7 @@ const Table = ({socket,input,host}) => {
                 "deck":false
             }
         });
-        //they then get option to play this card straight to the pile
+        //they then get option to play this card straight to the pile or swap it out for another card. 
     }
 
     function playCardToPile(){
@@ -164,9 +160,6 @@ const Table = ({socket,input,host}) => {
             "deck":true
         })
         endTurn(newState);
-        //add it to the pile
-        //update the game state, and send to everyone
-        //update hidden cards so can no longer see the top of deck
     }
 
     function takeFromPile(){
@@ -197,22 +190,22 @@ const Table = ({socket,input,host}) => {
         <div className='table-container'>
             <div id='host-cards' className='myCards'>
                 <div>{nickname}</div>
-                <ClientCards cards={myCards} hiddenCards= {hiddenCards}/>
+                <ClientCards cards={myCards} hiddenCards= {hiddenCards} setHiddenCards = {setHiddenCards}/>
             </div>
 
             <div id='player2' className='player2'>
                 {player2Name!==''&&<div>{player2Name}</div>}
-                <Player2Cards cards={player2Cards} hiddenCards= {hiddenCards}/>
+                <Player2Cards cards={player2Cards} hiddenCards= {hiddenCards} setHiddenCards = {setHiddenCards}/>
             </div>
 
             <div id='player3' className='player3'>
                 {player3Name!==''&&<div>{player3Name}</div>}
-                <Player3Cards cards={player3Cards} hiddenCards= {hiddenCards}/>
+                <Player3Cards cards={player3Cards} hiddenCards= {hiddenCards} setHiddenCards = {setHiddenCards}/>
             </div>
 
             <div id='player4' className='player4'>
                 {player4Name!==''&&<div>{player4Name}</div>}
-                <Player4Cards cards={player4Cards} hiddenCards= {hiddenCards}/>
+                <Player4Cards cards={player4Cards} hiddenCards= {hiddenCards} setHiddenCards = {setHiddenCards}/>
             </div>
 
             <div id='center-cards' className='center-cards'>
@@ -238,8 +231,8 @@ const Table = ({socket,input,host}) => {
                 {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && <button onClick = {takeFromDeck}>Take card from deck</button>}
                 {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && <button onClick = {takeFromPile}>Take card from pile</button>}
                 {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && <button>Play a Double</button>}
-                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && <button onClick={endTurn}>End Turn</button>}
                 {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && <button onClick={playCardToPile}>Play Straight to Pile</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && <button>Swap with card from my hand</button>}
             </div>
         </div>
     )
