@@ -33,6 +33,11 @@ const Table = ({socket,input,host}) => {
     const [inSwapProcess, setInSwapProcess] = useState(false);
     
     console.log('rendered. game state is: ', game);
+    let idx;
+    if (game.users!==[]){
+        idx = game.users.findIndex((entry)=>entry.id === socket.id);  
+    }
+    
 
     useEffect(()=>{
         console.log('ran use effect for socket connections');
@@ -163,15 +168,36 @@ const Table = ({socket,input,host}) => {
         endTurn(newState);
     }
 
-    function swap(cardIndex){
+    function swapWithDeck(cardIndex){
         console.log(`tried to swap card number ${cardIndex}`);
+        let newDeck = [...game.deck];
+        let newPile = [...game.pile];
+        let newHand = [...game.users[idx].hand];
+        let newUsers = [...game.users];
+
+        newPile.push(newHand.splice(cardIndex-1, 1, newDeck.pop())[0]); //splice returns an array of the deleted elements
+        newUsers[idx].hand = newHand;
+        let newState = {
+            ...game,
+            "deck": newDeck,
+            "pile": newPile,
+            "users": newUsers 
+        };
+        setGame(newState);
+        endTurn(newState);
+        let myHiddenCards = [true, true, true, true];
+        myHiddenCards[cardIndex-1] = false;
+        setHiddenCards({...hiddenCards, "deck":true});
+        setTimeout(()=>setHiddenCards({...hiddenCards,"deck":true,"clientCards":myHiddenCards}), 200);
+        setTimeout(()=>setHiddenCards({...hiddenCards,"deck":true,"clientCards":[true,true,true,true]}), 5000);
+        setInSwapProcess(false);
     }
 
 
     function takeFromPile(){
         console.log('took a card from the pile');
 
-        //same as above
+        //implement swap..
     }
 
     function endTurn(newState){
@@ -238,10 +264,10 @@ const Table = ({socket,input,host}) => {
                 {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && <button>Play a Double</button>}
                 {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inSwapProcess &&<button onClick={playCardToPile}>Play Straight to Pile</button>}
                 {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inSwapProcess&&<button onClick={()=>setInSwapProcess(true)}>Swap with card from my hand</button>}
-                {inSwapProcess && <button onClick = {()=>swap(1)}>Swap card 1</button>}
-                {inSwapProcess && <button onClick = {()=>swap(2)}>Swap card 2</button>}
-                {inSwapProcess && <button onClick = {()=>swap(3)}>Swap card 3</button>}
-                {inSwapProcess && <button onClick = {()=>swap(4)}>Swap card 4</button>}
+                {inSwapProcess && <button onClick = {()=>swapWithDeck(1)}>Swap card 1</button>}
+                {inSwapProcess && <button onClick = {()=>swapWithDeck(2)}>Swap card 2</button>}
+                {inSwapProcess && <button onClick = {()=>swapWithDeck(3)}>Swap card 3</button>}
+                {inSwapProcess && <button onClick = {()=>swapWithDeck(4)}>Swap card 4</button>}
             </div>
         </div>
     )
