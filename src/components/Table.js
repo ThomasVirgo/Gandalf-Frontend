@@ -10,7 +10,7 @@ import Player2Cards from './Hands/Player2';
 import Player3Cards from './Hands/Player3';
 import Player4Cards from './Hands/Player4';
 import setCardsToCurrentState from '../Utils/setCards';
-import {isMyTurn} from '../Utils/gameStateFunctions';
+import {isMyTurn, playMagicCard} from '../Utils/gameStateFunctions';
 
 
 
@@ -30,11 +30,12 @@ const Table = ({socket,input,host}) => {
         "player4":[true,true,true,true],
         "deck": true,
     });
-    const [inSwapProcess, setInSwapProcess] = useState([false, '']); // second value is 'deck' or 'pile' depending on which one they want to swap with.
+    const [inProcess, setInProcess] = useState([false, '']); // second value is 'deck' or 'pile' depending on which one they want to swap with.
+
     
     console.log('rendered. game state is: ', game);
     console.log('hidden cards: ', hiddenCards, isMyTurn(game,socket));
-    console.log('in swap:', inSwapProcess);
+    console.log('in swap:', inProcess);
 
     let idx;
     if (game.users!==[]){
@@ -84,7 +85,6 @@ const Table = ({socket,input,host}) => {
         }
 
         if (game.period === 'turns started'){
-            console.log('turns started, flipped cards back over...');
             setHiddenCards(hiddenCards=>{
                 return {
                     ...hiddenCards,
@@ -168,7 +168,32 @@ const Table = ({socket,input,host}) => {
             ...hiddenCards,
             "deck":true
         })
-        endTurn(newState);
+
+        let magicCards = ['7','8', '9', '10', 'J', 'Q'];
+        if (magicCards.indexOf(cardPlayed.value)!==-1){
+            playMagicCard(newState,cardPlayed);
+            if (cardPlayed.value === '7' || cardPlayed.value === '8'){
+                setInProcess([false, 'look at own']);
+                setTimeout(() => endTurn(newState), 1000*10);
+            } else {
+                endTurn(newState);
+            }
+        } else {
+          endTurn(newState);  
+        }
+        
+    }
+
+    function show(cardIndex, player){
+        if (player==='client'){
+            let arr = [true,true,true,true];
+            arr[cardIndex] = false;
+            setHiddenCards({
+                ...hiddenCards,
+                "clientCards": arr
+            })
+            setInProcess([false, '']);
+        }
     }
 
     function swap(cardIndex){
@@ -179,7 +204,7 @@ const Table = ({socket,input,host}) => {
         let newHand = [...game.users[idx].hand];
         let newUsers = [...game.users];
 
-        if (inSwapProcess[1]==='deck'){
+        if (inProcess[1]==='deck'){
             // swap a card from hand with top of deck
             newPile.push(newHand.splice(cardIndex, 1, newDeck.pop())[0]); //splice returns an array of the deleted elements
             socket.emit('card played', `${nickname} swapped out their ${numMap[cardIndex]} card for a card from the deck`);
@@ -205,7 +230,7 @@ const Table = ({socket,input,host}) => {
         setHiddenCards({...hiddenCards, "deck":true});
         setTimeout(()=>setHiddenCards({...hiddenCards,"deck":true,"clientCards":myHiddenCards}), 200); //show user the card they've just added to hand
         setTimeout(()=>setHiddenCards({...hiddenCards,"deck":true,"clientCards":[true,true,true,true]}), 5000);
-        setInSwapProcess(false);
+        setInProcess([false, '']);
     }
 
     function endTurn(newState){
@@ -267,15 +292,22 @@ const Table = ({socket,input,host}) => {
 
             <div className='playButtons'>
                 {game.period === 'look at two cards' && <button onClick = {readyUp}>Ready</button>}
-                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inSwapProcess[0] && <button onClick = {takeFromDeck}>Take card from deck</button>}
-                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inSwapProcess[0] && <button onClick = {()=>setInSwapProcess([true,'pile'])}>Take card from pile</button>}
+
+                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inProcess[0] && <button onClick = {takeFromDeck}>Take card from deck</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inProcess[0] && <button onClick = {()=>setInProcess([true,'pile'])}>Take card from pile</button>}
                 
-                {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inSwapProcess[0] &&<button onClick={playCardToPile}>Play Straight to Pile</button>}
-                {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inSwapProcess[0] &&<button onClick={()=>setInSwapProcess([true, 'deck'])}>Swap with card from my hand</button>}
-                {inSwapProcess[0] && <button onClick = {()=>swap(0)}>Swap card 1</button>}
-                {inSwapProcess[0] && <button onClick = {()=>swap(1)}>Swap card 2</button>}
-                {inSwapProcess[0] && <button onClick = {()=>swap(2)}>Swap card 3</button>}
-                {inSwapProcess[0] && <button onClick = {()=>swap(3)}>Swap card 4</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inProcess[0] &&<button onClick={playCardToPile}>Play Straight to Pile</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inProcess[0] &&<button onClick={()=>setInProcess([true, 'deck'])}>Swap with card from my hand</button>}
+                
+                {inProcess[0] && <button onClick = {()=>swap(0)}>Swap card 1</button>}
+                {inProcess[0] && <button onClick = {()=>swap(1)}>Swap card 2</button>}
+                {inProcess[0] && <button onClick = {()=>swap(2)}>Swap card 3</button>}
+                {inProcess[0] && <button onClick = {()=>swap(3)}>Swap card 4</button>}
+
+                {inProcess[1] === 'look at own' && <button onClick = {()=>show(0, 'client')}>Look at first card</button>}
+                {inProcess[1] === 'look at own' && <button onClick = {()=>show(1, 'client')}>Look at second card</button>}
+                {inProcess[1] === 'look at own' && <button onClick = {()=>show(2, 'client')}>Look at third card</button>}
+                {inProcess[1] === 'look at own' && <button onClick = {()=>show(3, 'client')}>Look at fourth card</button>}
             </div>
         </div>
     )
