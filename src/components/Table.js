@@ -5,10 +5,6 @@ import '../CSS/Table.css';
 import createDeck from '../Utils/CreateDeck';
 import dealCards from '../Utils/DealCards';
 import Card from './Card';
-import ClientCards from './Hands/Client';
-import Player2Cards from './Hands/Player2';
-import Player3Cards from './Hands/Player3';
-import Player4Cards from './Hands/Player4';
 import setCardsToCurrentState from '../Utils/setCards';
 import {isMyTurn} from '../Utils/gameStateFunctions';
 
@@ -20,7 +16,7 @@ const Table = ({socket,input,host}) => {
     if (host){room = newRoom} //so that only need to refer to room 
 
     
-    // remember that calling setState will re render the whole component...
+    // remember that calling setState will re render the whole component..., but all other code will be run first before changng value of state. 
     
     const [game, setGame] = useState(new GameState(room, nickname, socket.id));
     const [hiddenCards, setHiddenCards] = useState({
@@ -39,9 +35,9 @@ const Table = ({socket,input,host}) => {
         "deck": true,
     };
 
-    console.log('rendered. game state is: ', game);
-    console.log('hidden cards: ', hiddenCards, isMyTurn(game,socket));
-    console.log('in swap:', inProcess);
+    // console.log('rendered. game state is: ', game);
+    // console.log('hidden cards: ', hiddenCards, isMyTurn(game,socket));
+    // console.log('in swap:', inProcess);
 
     let idx;
     if (game.users!==[]){
@@ -52,8 +48,6 @@ const Table = ({socket,input,host}) => {
     useEffect(()=>{
         console.log('ran use effect for socket connections');
         socket.on('user joined', (obj)=>{
-            // let newState = game;
-            // newState.users.push(new User(obj.nickname, obj.id));
             console.log(`${obj.nickname} has joined the game`);
             let newUsers = [...game.users,new User(obj.nickname, obj.id)];
             setGame({
@@ -209,7 +203,7 @@ const Table = ({socket,input,host}) => {
         }
     }
 
-    function swap(cardIndex){
+    function swap(cardIndex, deck_or_pile){
         let numMap = ['first', 'second', 'third', 'fourth'];
         console.log(`tried to swap card number ${cardIndex}`);
         let newDeck = [...game.deck];
@@ -217,7 +211,7 @@ const Table = ({socket,input,host}) => {
         let newHand = [...game.users[idx].hand];
         let newUsers = [...game.users];
 
-        if (inProcess[1]==='deck'){
+        if (deck_or_pile ==='deck'){
             // swap a card from hand with top of deck
             newPile.push(newHand.splice(cardIndex, 1, newDeck.pop())[0]); //splice returns an array of the deleted elements
             socket.emit('card played', `${nickname} swapped out their ${numMap[cardIndex]} card for a card from the deck`);
@@ -258,36 +252,44 @@ const Table = ({socket,input,host}) => {
         socket.emit('state change', newState);
     }
 
-    function cardClicked(player,card){
+    function cardClicked(player, card, index){
         console.log(player, card);
-    }
+        if (inProcess[0] && player === 'client' && inProcess[1] === 'deck'){
+            swap(index, 'deck')
+        }
+        if (inProcess[0] && player === 'client' && inProcess[1] === 'pile'){
+            swap(index, 'pile')
+        }
+    };
 
     // set the cards in game to the current game state;
     let {myCards,player2Cards,player2Name,player3Cards,player3Name,player4Cards,player4Name,deckTop,pileTop}=setCardsToCurrentState(game,socket);
     
-    let myCardElements = (myCards.map((card,index)=><div onClick = {()=>cardClicked('client', card)}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.clientCards[index]} key={index}/></div>))
-    //create component for each players hand
+    let myCardElements = (myCards.map((card,index)=><div onClick = {()=>cardClicked('client', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.clientCards[index]}/></div>))
+    let player2Elements = (player2Cards.map((card,index)=><div onClick = {()=>cardClicked('player2', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.player2[index]}/></div>))
+    let player3Elements = (player3Cards.map((card,index)=><div onClick = {()=>cardClicked('player3', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.player3[index]}/></div>))
+    let player4Elements = (player4Cards.map((card,index)=><div onClick = {()=>cardClicked('player4', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.player4[index]}/></div>))
+    
     return (
         <div className='table-container'>
             <div id='host-cards' className='myCards'>
                 <div>{nickname}</div>
                 {myCardElements}
-                {/* <ClientCards cards={myCards} hiddenCards= {hiddenCards} setHiddenCards = {setHiddenCards}/> */}
             </div>
 
             <div id='player2' className='player2'>
                 {player2Name!==''&&<div>{player2Name}</div>}
-                <Player2Cards cards={player2Cards} hiddenCards= {hiddenCards} setHiddenCards = {setHiddenCards}/>
+                {player2Elements}
             </div>
 
             <div id='player3' className='player3'>
                 {player3Name!==''&&<div>{player3Name}</div>}
-                <Player3Cards cards={player3Cards} hiddenCards= {hiddenCards} setHiddenCards = {setHiddenCards}/>
+                {player3Elements}
             </div>
 
             <div id='player4' className='player4'>
                 {player4Name!==''&&<div>{player4Name}</div>}
-                <Player4Cards cards={player4Cards} hiddenCards= {hiddenCards} setHiddenCards = {setHiddenCards}/>
+                {player4Elements}
             </div>
 
             <div id='center-cards' className='center-cards'>
@@ -317,10 +319,12 @@ const Table = ({socket,input,host}) => {
                 {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inProcess[0] &&<button onClick={playCardToPile}>Play Straight to Pile</button>}
                 {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inProcess[0] &&<button onClick={()=>setInProcess([true, 'deck'])}>Swap with card from my hand</button>}
                 
-                {inProcess[0] && <button onClick = {()=>swap(0)}>Swap card 1</button>}
+                {/* {inProcess[0] && <button onClick = {()=>swap(0)}>Swap card 1</button>}
                 {inProcess[0] && <button onClick = {()=>swap(1)}>Swap card 2</button>}
                 {inProcess[0] && <button onClick = {()=>swap(2)}>Swap card 3</button>}
-                {inProcess[0] && <button onClick = {()=>swap(3)}>Swap card 4</button>}
+                {inProcess[0] && <button onClick = {()=>swap(3)}>Swap card 4</button>} */}
+
+                {inProcess[0] && <h3>click the card you want to swap</h3>}
 
                 {inProcess[1] === 'look at own' && <button onClick = {()=>show(0, 'client')}>Look at first card</button>}
                 {inProcess[1] === 'look at own' && <button onClick = {()=>show(1, 'client')}>Look at second card</button>}
