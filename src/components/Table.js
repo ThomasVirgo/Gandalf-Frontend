@@ -10,7 +10,7 @@ import Player2Cards from './Hands/Player2';
 import Player3Cards from './Hands/Player3';
 import Player4Cards from './Hands/Player4';
 import setCardsToCurrentState from '../Utils/setCards';
-import {isMyTurn, playMagicCard} from '../Utils/gameStateFunctions';
+import {isMyTurn} from '../Utils/gameStateFunctions';
 
 
 
@@ -31,8 +31,14 @@ const Table = ({socket,input,host}) => {
         "deck": true,
     });
     const [inProcess, setInProcess] = useState([false, '']); // second value is 'deck' or 'pile' depending on which one they want to swap with.
+    const defaultHiddenCards = {
+        "clientCards":[true,true,true,true],
+        "player2":[true,true,true,true],
+        "player3":[true,true,true,true],
+        "player4":[true,true,true,true],
+        "deck": true,
+    };
 
-    
     console.log('rendered. game state is: ', game);
     console.log('hidden cards: ', hiddenCards, isMyTurn(game,socket));
     console.log('in swap:', inProcess);
@@ -171,11 +177,18 @@ const Table = ({socket,input,host}) => {
 
         let magicCards = ['7','8', '9', '10', 'J', 'Q'];
         if (magicCards.indexOf(cardPlayed.value)!==-1){
-            playMagicCard(newState,cardPlayed);
             if (cardPlayed.value === '7' || cardPlayed.value === '8'){
                 setInProcess([false, 'look at own']);
-                setTimeout(() => endTurn(newState), 1000*10);
-            } else {
+                endTurn(newState); //end turn so everyone can see theyve played a 7 or 8 but then setTimeout to remove buttons and hide cards. 
+                setTimeout(()=>setHiddenCards(defaultHiddenCards), 1000*10); //need to set message saying you have 10 seconds to look at a card
+                setTimeout(()=>setInProcess([false,'']), 1000*10); 
+            } else if (cardPlayed.value === '9' || cardPlayed.value === '10'){
+                setInProcess([false, 'look at theirs']);
+                endTurn(newState);
+                setTimeout(()=>setHiddenCards(defaultHiddenCards), 1000*10); //need to set message saying you have 10 seconds to look at someone elses card
+                setTimeout(()=>setInProcess([false,'']), 1000*10);
+            }
+            else {
                 endTurn(newState);
             }
         } else {
@@ -245,16 +258,21 @@ const Table = ({socket,input,host}) => {
         socket.emit('state change', newState);
     }
 
+    function cardClicked(player,card){
+        console.log(player, card);
+    }
+
     // set the cards in game to the current game state;
     let {myCards,player2Cards,player2Name,player3Cards,player3Name,player4Cards,player4Name,deckTop,pileTop}=setCardsToCurrentState(game,socket);
     
-
+    let myCardElements = (myCards.map((card,index)=><div onClick = {()=>cardClicked('client', card)}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.clientCards[index]} key={index}/></div>))
     //create component for each players hand
     return (
         <div className='table-container'>
             <div id='host-cards' className='myCards'>
                 <div>{nickname}</div>
-                <ClientCards cards={myCards} hiddenCards= {hiddenCards} setHiddenCards = {setHiddenCards}/>
+                {myCardElements}
+                {/* <ClientCards cards={myCards} hiddenCards= {hiddenCards} setHiddenCards = {setHiddenCards}/> */}
             </div>
 
             <div id='player2' className='player2'>
@@ -308,6 +326,8 @@ const Table = ({socket,input,host}) => {
                 {inProcess[1] === 'look at own' && <button onClick = {()=>show(1, 'client')}>Look at second card</button>}
                 {inProcess[1] === 'look at own' && <button onClick = {()=>show(2, 'client')}>Look at third card</button>}
                 {inProcess[1] === 'look at own' && <button onClick = {()=>show(3, 'client')}>Look at fourth card</button>}
+
+                {inProcess[1] === 'look at theirs' && <button onClick = {()=>show(3, 'client')}>Look at fourth card</button>}
             </div>
         </div>
     )

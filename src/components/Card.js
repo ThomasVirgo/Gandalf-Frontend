@@ -1,7 +1,7 @@
 import React from 'react';
 import '../CSS/Cards.css';
 //pass in as props the value e.g. jack or ace etc...
-const Card = ({value, suit, hidden, index, hiddenCards, setHiddenCards, whoseCards}) => {
+const Card = ({value, suit, hidden}) => {
 
     let symbols = {
         'diamonds':'\u2666',
@@ -28,18 +28,9 @@ const Card = ({value, suit, hidden, index, hiddenCards, setHiddenCards, whoseCar
         cardStyle = {};
     }
 
-    function showCard(){
-        if (!whoseCards){return}
-        let arr = hiddenCards[whoseCards];
-        arr[index] = false;
-        setHiddenCards({
-            ...hiddenCards,
-            [whoseCards]: arr,
-        })
-    }
 
     return (
-        <div className = 'card-container' style={cardColor} onClick={showCard}>
+        <div className = 'card-container' style={cardColor}>
             <div style={cardStyle}>
                 <div className='card-top' style={textStyle}>
                     <span>{value}</span><span>{suitSymbol}</span>
