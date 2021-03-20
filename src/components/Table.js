@@ -27,6 +27,8 @@ const Table = ({socket,input,host}) => {
         "deck": true,
     });
     const [inProcess, setInProcess] = useState([false, '']); // second value is 'deck' or 'pile' depending on which one they want to swap with.
+    const [jackSwap, setJackSwap] = useState([]);
+
     const defaultHiddenCards = {
         "clientCards":[true,true,true,true],
         "player2":[true,true,true,true],
@@ -175,23 +177,35 @@ const Table = ({socket,input,host}) => {
                 setInProcess([false, 'look at own']);
                 endTurn(newState); //end turn so everyone can see theyve played a 7 or 8 but then setTimeout to remove buttons and hide cards. 
                 setTimeout(()=>setHiddenCards(defaultHiddenCards), 1000*10); //need to set message saying you have 10 seconds to look at a card
-                setTimeout(()=>setInProcess([false,'']), 1000*10); 
+                //setTimeout(()=>setInProcess([false,'']), 1000*10); 
             } else if (cardPlayed.value === '9' || cardPlayed.value === '10'){
                 setInProcess([false, 'look at theirs']);
                 endTurn(newState);
                 setTimeout(()=>setHiddenCards(defaultHiddenCards), 1000*10); //need to set message saying you have 10 seconds to look at someone elses card
                 setTimeout(()=>setInProcess([false,'']), 1000*10);
+            } else if (cardPlayed.value === 'J'){
+                endTurn(newState);
+                setInProcess([false, 'pick your card to swap']);
+                setTimeout(()=>setInProcess([false,'']), 10000*20);
+            } else if (cardPlayed.value === 'Q'){
+                //increment turn an extra time
+                if (newState.turn === newState.users.length-1){
+                    newState.turn = 0;
+                } else {
+                    newState.turn = newState.turn + 1;  
+                };
+                endTurn(newState);
             }
             else {
                 endTurn(newState);
             }
         } else {
           endTurn(newState);  
-        }
-        
+        }    
     }
 
     function show(cardIndex, player){
+        
         if (player==='client'){
             let arr = [true,true,true,true];
             arr[cardIndex] = false;
@@ -199,8 +213,15 @@ const Table = ({socket,input,host}) => {
                 ...hiddenCards,
                 "clientCards": arr
             })
-            setInProcess([false, '']);
+        } else {
+            let arr = [true,true,true,true];
+            arr[cardIndex] = false; 
+            setHiddenCards({
+                ...hiddenCards,
+                [player]:arr,
+            })
         }
+        setInProcess([false, '']);
     }
 
     function swap(cardIndex, deck_or_pile){
@@ -255,11 +276,31 @@ const Table = ({socket,input,host}) => {
     function cardClicked(player, card, index){
         console.log(player, card);
         if (inProcess[0] && player === 'client' && inProcess[1] === 'deck'){
-            swap(index, 'deck')
+            swap(index, 'deck');
         }
         if (inProcess[0] && player === 'client' && inProcess[1] === 'pile'){
-            swap(index, 'pile')
+            swap(index, 'pile');
         }
+        if (inProcess[1] === 'look at own' && player === 'client'){
+            show(index, player);
+        }
+        if (inProcess[1] === 'look at theirs' && player !== 'client'){
+            show(index, player);
+        }
+        if (inProcess[1] === 'pick your card to swap' && player === 'client'){
+            //store this card
+            setJackSwap([card,index])
+            setInProcess([false, 'pick their card to swap']);
+        }
+        if (inProcess[1] === 'pick their card to swap' && player !== 'client'){
+            //store this card
+            performJackSwap(jackSwap, [card,index])
+            setInProcess([false, '']);
+        }
+    };
+
+    function performJackSwap(myCardArr, theirCardArr){
+        console.log('to be completed', myCardArr, theirCardArr);
     };
 
     // set the cards in game to the current game state;
@@ -318,20 +359,16 @@ const Table = ({socket,input,host}) => {
                 
                 {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inProcess[0] &&<button onClick={playCardToPile}>Play Straight to Pile</button>}
                 {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inProcess[0] &&<button onClick={()=>setInProcess([true, 'deck'])}>Swap with card from my hand</button>}
-                
-                {/* {inProcess[0] && <button onClick = {()=>swap(0)}>Swap card 1</button>}
-                {inProcess[0] && <button onClick = {()=>swap(1)}>Swap card 2</button>}
-                {inProcess[0] && <button onClick = {()=>swap(2)}>Swap card 3</button>}
-                {inProcess[0] && <button onClick = {()=>swap(3)}>Swap card 4</button>} */}
 
                 {inProcess[0] && <h3>click the card you want to swap</h3>}
 
-                {inProcess[1] === 'look at own' && <button onClick = {()=>show(0, 'client')}>Look at first card</button>}
-                {inProcess[1] === 'look at own' && <button onClick = {()=>show(1, 'client')}>Look at second card</button>}
-                {inProcess[1] === 'look at own' && <button onClick = {()=>show(2, 'client')}>Look at third card</button>}
-                {inProcess[1] === 'look at own' && <button onClick = {()=>show(3, 'client')}>Look at fourth card</button>}
+                {inProcess[1] === 'look at own' && <h3>click on one of your own cards you want to see, it will disappear in 10 seconds.</h3>}
 
-                {inProcess[1] === 'look at theirs' && <button onClick = {()=>show(3, 'client')}>Look at fourth card</button>}
+                {inProcess[1] === 'look at theirs' && <h3>click someone elses card you want to see, it will disappear in 10 seconds.</h3>}
+
+                {inProcess[1] === 'pick your card to swap' && <h3>click on one of your own cards you want to swap.</h3>}
+                {inProcess[1] === 'pick their card to swap' && <h3>click on someone elses card you want to swap your card with.</h3>}
+                
             </div>
         </div>
     )
