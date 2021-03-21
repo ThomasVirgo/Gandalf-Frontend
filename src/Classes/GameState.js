@@ -10,6 +10,7 @@ class GameState{
         this.pile = [];
         this.period = 'waiting for players';
         this.gandalf = [false, ''];
+        this.round = 1;
     }
 }
 

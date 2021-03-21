@@ -92,6 +92,18 @@ const Table = ({socket,input,host}) => {
                 }
             })
         }
+
+        if (game.gandalf[0] && game.gandalf[1] === game.users[game.turn].id){
+            setHiddenCards(hiddenCards => ({
+                ...hiddenCards,
+                "clientCards":[false,false,false,false],
+                "player2": [false,false,false,false],
+                "player3": [false,false,false,false],
+                "player4": [false,false,false,false],
+            }))
+            setInProcess([false,'']);
+            //send message to everyone with points etc...
+        }
         
     }, [game])
 
@@ -317,32 +329,15 @@ const Table = ({socket,input,host}) => {
     };
 
     function callGandalf(){
+        let newUsers = [...game.users];
+        
         let newState = {
             ...game,
+            "users": newUsers,
+            "period":'gandalf called',
             "gandalf":[true, socket.id]
         }
         endTurn(newState); 
-    }
-
-    if (isMyTurn(game,socket) && game.gandalf[0] && game.gandalf[1] === socket.id){
-        endRound();
-    }
-
-    function endRound(){
-        setHiddenCards({
-            ...hiddenCards,
-            "clientCards":[false,false,false,false],
-            "player2": [false,false,false,false],
-            "player3": [false,false,false,false],
-            "player4": [false,false,false,false],
-        })
-        setGame({
-            ...game,
-            "gandalf":[false,'']
-        })
-        // add everyones total points
-        // send message to everyone saying round over, winner was...
-        // implement starting new round (should also move person that starts)
     }
 
     // set the cards in game to the current game state;
