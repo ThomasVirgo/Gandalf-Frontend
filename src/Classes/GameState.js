@@ -9,6 +9,7 @@ class GameState{
         this.deck = [];
         this.pile = [];
         this.period = 'waiting for players';
+        this.gandalf = [false, ''];
     }
 }
 

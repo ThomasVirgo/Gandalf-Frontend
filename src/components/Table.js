@@ -37,9 +37,8 @@ const Table = ({socket,input,host}) => {
         "deck": true,
     };
 
-    // console.log('rendered. game state is: ', game);
-    // console.log('hidden cards: ', hiddenCards, isMyTurn(game,socket));
-    // console.log('in swap:', inProcess);
+    console.log(game);
+    
 
     let idx;
     if (game.users!==[]){
@@ -77,7 +76,6 @@ const Table = ({socket,input,host}) => {
     // change which cards are hidden according to the game state
     useEffect(()=>{
         if (game.period === 'look at two cards'){
-            console.log('set hidden cards to show first two!');
             setHiddenCards(hiddenCards => {
                 return {
                     ...hiddenCards,
@@ -126,7 +124,6 @@ const Table = ({socket,input,host}) => {
         setGame(newState); // this new state in game variable is only accessible on the NEXT render!
         socket.emit('state change', newState);
         checkAllReady(newState);
-        console.log('ran ready up function')
     }
 
     function checkAllReady(state){
@@ -142,8 +139,6 @@ const Table = ({socket,input,host}) => {
     }
 
     function takeFromDeck(){
-        console.log('took a card from the deck');
-
         //show player the card
         setHiddenCards(hiddenCards=>{
             return {
@@ -184,9 +179,8 @@ const Table = ({socket,input,host}) => {
                 setTimeout(()=>setHiddenCards(defaultHiddenCards), 1000*10); //need to set message saying you have 10 seconds to look at someone elses card
                 setTimeout(()=>setInProcess([false,'']), 1000*10);
             } else if (cardPlayed.value === 'J'){
-                endTurn(newState);
-                setInProcess([false, 'pick your card to swap']);
-                setTimeout(()=>setInProcess([false,'']), 10000*20);
+                socket.emit('card played', `${nickname} played a jack, and is in process of swapping.`)
+                setInProcess([false, 'pick your card to swap', newState]);
             } else if (cardPlayed.value === 'Q'){
                 //increment turn an extra time
                 if (newState.turn === newState.users.length-1){
@@ -226,7 +220,6 @@ const Table = ({socket,input,host}) => {
 
     function swap(cardIndex, deck_or_pile){
         let numMap = ['first', 'second', 'third', 'fourth'];
-        console.log(`tried to swap card number ${cardIndex}`);
         let newDeck = [...game.deck];
         let newPile = [...game.pile];
         let newHand = [...game.users[idx].hand];
@@ -288,20 +281,69 @@ const Table = ({socket,input,host}) => {
             show(index, player);
         }
         if (inProcess[1] === 'pick your card to swap' && player === 'client'){
-            //store this card
-            setJackSwap([card,index])
+            //store this card, third item of inprocess at this point is the state.
+            setJackSwap([card,index, inProcess[2]])
             setInProcess([false, 'pick their card to swap']);
         }
         if (inProcess[1] === 'pick their card to swap' && player !== 'client'){
             //store this card
-            performJackSwap(jackSwap, [card,index])
+            performJackSwap(jackSwap, [card,index,player])
             setInProcess([false, '']);
         }
     };
 
     function performJackSwap(myCardArr, theirCardArr){
-        console.log('to be completed', myCardArr, theirCardArr);
+        let myHand = [...game.users[idx].hand];
+        let myCard = myCardArr[0];
+        let theirCard = theirCardArr[0];
+        let theirUserIdx = game.users.findIndex((userObj) => {
+            return userObj.hand.some(entry=>entry.value===theirCard.value && entry.suit === theirCard.suit)
+        });
+        let theirHand = [...game.users[theirUserIdx].hand];
+        //swap the cards
+        myHand[myCardArr[1]] = theirCard;
+        theirHand[theirCardArr[1]] = myCard;
+        let newUsers = [...game.users];
+        newUsers[idx].hand = myHand;
+        newUsers[theirUserIdx].hand = theirHand;
+        let newState = {
+            ...myCardArr[2],
+            "users":newUsers
+        }
+        console.log('the state being used is:', newState);
+        endTurn(newState);
+        //need to find the hand in gamestate that belongs to that player
+        setJackSwap([]);
     };
+
+    function callGandalf(){
+        let newState = {
+            ...game,
+            "gandalf":[true, socket.id]
+        }
+        endTurn(newState); 
+    }
+
+    if (isMyTurn(game,socket) && game.gandalf[0] && game.gandalf[1] === socket.id){
+        endRound();
+    }
+
+    function endRound(){
+        setHiddenCards({
+            ...hiddenCards,
+            "clientCards":[false,false,false,false],
+            "player2": [false,false,false,false],
+            "player3": [false,false,false,false],
+            "player4": [false,false,false,false],
+        })
+        setGame({
+            ...game,
+            "gandalf":[false,'']
+        })
+        // add everyones total points
+        // send message to everyone saying round over, winner was...
+        // implement starting new round (should also move person that starts)
+    }
 
     // set the cards in game to the current game state;
     let {myCards,player2Cards,player2Name,player3Cards,player3Name,player4Cards,player4Name,deckTop,pileTop}=setCardsToCurrentState(game,socket);
@@ -356,6 +398,7 @@ const Table = ({socket,input,host}) => {
 
                 {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inProcess[0] && <button onClick = {takeFromDeck}>Take card from deck</button>}
                 {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inProcess[0] && <button onClick = {()=>setInProcess([true,'pile'])}>Take card from pile</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inProcess[0] && !game.gandalf[0] && <button onClick = {callGandalf}>Gandalf!</button>}
                 
                 {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inProcess[0] &&<button onClick={playCardToPile}>Play Straight to Pile</button>}
                 {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inProcess[0] &&<button onClick={()=>setInProcess([true, 'deck'])}>Swap with card from my hand</button>}
@@ -368,6 +411,8 @@ const Table = ({socket,input,host}) => {
 
                 {inProcess[1] === 'pick your card to swap' && <h3>click on one of your own cards you want to swap.</h3>}
                 {inProcess[1] === 'pick their card to swap' && <h3>click on someone elses card you want to swap your card with.</h3>}
+
+                
                 
             </div>
         </div>
