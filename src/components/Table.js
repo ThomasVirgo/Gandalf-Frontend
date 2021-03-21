@@ -6,7 +6,7 @@ import createDeck from '../Utils/CreateDeck';
 import dealCards from '../Utils/DealCards';
 import Card from './Card';
 import setCardsToCurrentState from '../Utils/setCards';
-import {isMyTurn} from '../Utils/gameStateFunctions';
+import {isMyTurn, addPlayerPoints} from '../Utils/gameStateFunctions';
 
 
 
@@ -38,6 +38,7 @@ const Table = ({socket,input,host}) => {
     };
 
     console.log(game);
+    console.log(inProcess);
     
 
     let idx;
@@ -47,7 +48,6 @@ const Table = ({socket,input,host}) => {
     
 
     useEffect(()=>{
-        console.log('ran use effect for socket connections');
         socket.on('user joined', (obj)=>{
             console.log(`${obj.nickname} has joined the game`);
             let newUsers = [...game.users,new User(obj.nickname, obj.id)];
@@ -84,7 +84,8 @@ const Table = ({socket,input,host}) => {
             });
         }
 
-        if (game.period === 'turns started'){
+        //remove this and add it to endturn function.
+        if (game.period === 'turns started' && !game.gandalf[0]){
             setHiddenCards(hiddenCards=>{
                 return {
                     ...hiddenCards,
@@ -102,6 +103,15 @@ const Table = ({socket,input,host}) => {
                 "player4": [false,false,false,false],
             }))
             setInProcess([false,'']);
+            let newState = addPlayerPoints(game);
+            let dummyTurn;
+            if (game.turn === 0){
+                dummyTurn = 1;
+            } else {dummyTurn=0};
+            setGame({
+                ...newState,
+                "turn": dummyTurn
+            });
             //send message to everyone with points etc...
         }
         
@@ -334,7 +344,6 @@ const Table = ({socket,input,host}) => {
         let newState = {
             ...game,
             "users": newUsers,
-            "period":'gandalf called',
             "gandalf":[true, socket.id]
         }
         endTurn(newState); 
@@ -406,6 +415,8 @@ const Table = ({socket,input,host}) => {
 
                 {inProcess[1] === 'pick your card to swap' && <h3>click on one of your own cards you want to swap.</h3>}
                 {inProcess[1] === 'pick their card to swap' && <h3>click on someone elses card you want to swap your card with.</h3>}
+
+                {game.period === 'turns started' && isMyTurn(game,socket) && <button onClick = {endTurn}>End Turn</button>}
 
                 
                 
