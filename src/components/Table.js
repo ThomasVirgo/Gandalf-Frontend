@@ -75,7 +75,7 @@ const Table = ({socket,input,host}) => {
 
     // change which cards are hidden according to the game state
     useEffect(()=>{
-        if (game.period === 'look at two cards'){
+        if (game.period === 'look at two cards' && !game.users[idx].ready){
             setHiddenCards(hiddenCards => {
                 return {
                     ...hiddenCards,
@@ -85,14 +85,14 @@ const Table = ({socket,input,host}) => {
         }
 
         //remove this and add it to endturn function.
-        if (game.period === 'turns started' && !game.gandalf[0]){
-            setHiddenCards(hiddenCards=>{
-                return {
-                    ...hiddenCards,
-                    "clientCards":[true,true,true,true]
-                }
-            })
-        }
+        // if (game.period === 'turns started' && !game.gandalf[0]){
+        //     setHiddenCards(hiddenCards=>{
+        //         return {
+        //             ...hiddenCards,
+        //             "clientCards":[true,true,true,true]
+        //         }
+        //     })
+        // }
 
         if (game.gandalf[0] && game.gandalf[1] === game.users[game.turn].id){
             setHiddenCards(hiddenCards => ({
@@ -144,6 +144,7 @@ const Table = ({socket,input,host}) => {
             "users": myUsers 
         }
         setGame(newState); // this new state in game variable is only accessible on the NEXT render!
+        setHiddenCards(defaultHiddenCards);
         socket.emit('state change', newState);
         checkAllReady(newState);
     }
@@ -191,33 +192,40 @@ const Table = ({socket,input,host}) => {
         let magicCards = ['7','8', '9', '10', 'J', 'Q'];
         if (magicCards.indexOf(cardPlayed.value)!==-1){
             if (cardPlayed.value === '7' || cardPlayed.value === '8'){
-                setInProcess([false, 'look at own']);
-                endTurn(newState); //end turn so everyone can see theyve played a 7 or 8 but then setTimeout to remove buttons and hide cards. 
-                setTimeout(()=>setHiddenCards(defaultHiddenCards), 1000*10); //need to set message saying you have 10 seconds to look at a card
-                //setTimeout(()=>setInProcess([false,'']), 1000*10); 
+                setInProcess([false, 'look at own']); 
             } else if (cardPlayed.value === '9' || cardPlayed.value === '10'){
                 setInProcess([false, 'look at theirs']);
-                endTurn(newState);
-                setTimeout(()=>setHiddenCards(defaultHiddenCards), 1000*10); //need to set message saying you have 10 seconds to look at someone elses card
-                setTimeout(()=>setInProcess([false,'']), 1000*10);
             } else if (cardPlayed.value === 'J'){
                 socket.emit('card played', `${nickname} played a jack, and is in process of swapping.`)
                 setInProcess([false, 'pick your card to swap', newState]);
             } else if (cardPlayed.value === 'Q'){
-                //increment turn an extra time
-                if (newState.turn === newState.users.length-1){
-                    newState.turn = 0;
-                } else {
-                    newState.turn = newState.turn + 1;  
-                };
-                endTurn(newState);
-            }
-            else {
-                endTurn(newState);
+                //increment turn an extra time, i.e. twice
+                if (newState.users.length === 2){
+                    setInProcess([false,""]);
+                } else if (newState.users.length === 3){
+                    if (newState.turn === 0){
+                        newState.turn = 2;
+                    } else {
+                        newState.turn -= 1;
+                    }
+                } else if (newState.users.length === 4){
+                    if (newState.turn < 2){
+                        newState.turn += 2;
+                    } else {
+                        newState.turn -= 2;
+                    }
+                }    
             }
         } else {
-          endTurn(newState);  
-        }    
+            setInProcess([false, 'waiting for user to end turn']);
+        }
+        changeState(newState)       
+    }
+
+    function changeState(newState){
+        // this function takes the new game state and send it to everyone. Also updates clinet state via setState.
+        setGame(newState)
+        socket.emit('state change', newState);
     }
 
     function show(cardIndex, player){
@@ -266,41 +274,30 @@ const Table = ({socket,input,host}) => {
             "pile": newPile,
             "users": newUsers 
         };
-        //setGame(newState);
-        endTurn(newState);
+        changeState(newState);
         let myHiddenCards = [true, true, true, true];
-        myHiddenCards[cardIndex] = false;
-        setHiddenCards({...hiddenCards, "deck":true});
-        setTimeout(()=>setHiddenCards({...hiddenCards,"deck":true,"clientCards":myHiddenCards}), 200); //show user the card they've just added to hand
-        setTimeout(()=>setHiddenCards({...hiddenCards,"deck":true,"clientCards":[true,true,true,true]}), 5000);
-        setInProcess([false, '']);
+        myHiddenCards[cardIndex] = false; //show user the card they've just added
+        setHiddenCards({...hiddenCards, "clientCards":myHiddenCards, "deck":true});
     }
 
-    function endTurn(newState){
-        //this function takes the adpated state and increments the turn and emits new state to all players. 
-        if (newState.turn === newState.users.length-1){
-            newState.turn = 0;
-        } else {
-            newState.turn = newState.turn + 1;  
-        }
-        newState.message = `${newState.users[newState.turn].nickname}'s turn!`
-        setGame(newState);
-        socket.emit('state change', newState);
-    }
 
     function cardClicked(player, card, index){
         console.log(player, card);
         if (inProcess[0] && player === 'client' && inProcess[1] === 'deck'){
             swap(index, 'deck');
+            setInProcess([true, '']);
         }
         if (inProcess[0] && player === 'client' && inProcess[1] === 'pile'){
             swap(index, 'pile');
+            setInProcess([true, '']);
         }
         if (inProcess[1] === 'look at own' && player === 'client'){
             show(index, player);
+            setInProcess([true, '']);
         }
         if (inProcess[1] === 'look at theirs' && player !== 'client'){
             show(index, player);
+            setInProcess([true, '']);
         }
         if (inProcess[1] === 'pick your card to swap' && player === 'client'){
             //store this card, third item of inprocess at this point is the state.
@@ -333,7 +330,7 @@ const Table = ({socket,input,host}) => {
             "users":newUsers
         }
         console.log('the state being used is:', newState);
-        endTurn(newState);
+        changeState(newState);
         //need to find the hand in gamestate that belongs to that player
         setJackSwap([]);
     };
@@ -346,7 +343,22 @@ const Table = ({socket,input,host}) => {
             "users": newUsers,
             "gandalf":[true, socket.id]
         }
-        endTurn(newState); 
+        changeState(newState); 
+    }
+
+    function endTurn(){
+        // need to have changed cards state before this!!
+        let newState = {...game};
+        if (newState.turn === newState.users.length-1){
+            newState.turn = 0;
+        } else {
+            newState.turn = newState.turn + 1;  
+        }
+        newState.message = `${newState.users[newState.turn].nickname}'s turn!`
+        setGame(newState);
+        setInProcess([false,'']);
+        setHiddenCards(defaultHiddenCards);
+        socket.emit('state change', newState);
     }
 
     // set the cards in game to the current game state;
@@ -400,7 +412,7 @@ const Table = ({socket,input,host}) => {
             <div className='playButtons'>
                 {game.period === 'look at two cards' && <button onClick = {readyUp}>Ready</button>}
 
-                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inProcess[0] && <button onClick = {takeFromDeck}>Take card from deck</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && inProcess[1] === '' && <button onClick = {takeFromDeck}>Take card from deck</button>}
                 {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inProcess[0] && <button onClick = {()=>setInProcess([true,'pile'])}>Take card from pile</button>}
                 {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inProcess[0] && !game.gandalf[0] && <button onClick = {callGandalf}>Gandalf!</button>}
                 
