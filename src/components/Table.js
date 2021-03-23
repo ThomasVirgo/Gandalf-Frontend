@@ -169,7 +169,9 @@ const Table = ({socket,input,host}) => {
                 "deck":false
             }
         });
+        setInProcess([true, 'deck card taken']);
         //they then get option to play this card straight to the pile or swap it out for another card. 
+        // add a setinProcess!
     }
 
     function playCardToPile(){
@@ -192,12 +194,12 @@ const Table = ({socket,input,host}) => {
         let magicCards = ['7','8', '9', '10', 'J', 'Q'];
         if (magicCards.indexOf(cardPlayed.value)!==-1){
             if (cardPlayed.value === '7' || cardPlayed.value === '8'){
-                setInProcess([false, 'look at own']); 
+                setInProcess([true, 'look at own']); 
             } else if (cardPlayed.value === '9' || cardPlayed.value === '10'){
-                setInProcess([false, 'look at theirs']);
+                setInProcess([true, 'look at theirs']);
             } else if (cardPlayed.value === 'J'){
                 socket.emit('card played', `${nickname} played a jack, and is in process of swapping.`)
-                setInProcess([false, 'pick your card to swap', newState]);
+                setInProcess([true, 'pick your card to swap', newState]);
             } else if (cardPlayed.value === 'Q'){
                 //increment turn an extra time, i.e. twice
                 if (newState.users.length === 2){
@@ -217,7 +219,7 @@ const Table = ({socket,input,host}) => {
                 }    
             }
         } else {
-            setInProcess([false, 'waiting for user to end turn']);
+            setInProcess([true, 'ready to end turn']);
         }
         changeState(newState)       
     }
@@ -285,29 +287,29 @@ const Table = ({socket,input,host}) => {
         console.log(player, card);
         if (inProcess[0] && player === 'client' && inProcess[1] === 'deck'){
             swap(index, 'deck');
-            setInProcess([true, '']);
+            setInProcess([true, 'ready to end turn']);
         }
         if (inProcess[0] && player === 'client' && inProcess[1] === 'pile'){
             swap(index, 'pile');
-            setInProcess([true, '']);
+            setInProcess([true, 'ready to end turn']);
         }
         if (inProcess[1] === 'look at own' && player === 'client'){
             show(index, player);
-            setInProcess([true, '']);
+            setInProcess([true, 'ready to end turn']);
         }
         if (inProcess[1] === 'look at theirs' && player !== 'client'){
             show(index, player);
-            setInProcess([true, '']);
+            setInProcess([true, 'ready to end turn']);
         }
         if (inProcess[1] === 'pick your card to swap' && player === 'client'){
             //store this card, third item of inprocess at this point is the state.
             setJackSwap([card,index, inProcess[2]])
-            setInProcess([false, 'pick their card to swap']);
+            setInProcess([true, 'pick their card to swap']);
         }
         if (inProcess[1] === 'pick their card to swap' && player !== 'client'){
             //store this card
             performJackSwap(jackSwap, [card,index,player])
-            setInProcess([false, '']);
+            setInProcess([true, 'ready to end turn']);
         }
     };
 
@@ -329,9 +331,7 @@ const Table = ({socket,input,host}) => {
             ...myCardArr[2],
             "users":newUsers
         }
-        console.log('the state being used is:', newState);
         changeState(newState);
-        //need to find the hand in gamestate that belongs to that player
         setJackSwap([]);
     };
 
@@ -343,7 +343,8 @@ const Table = ({socket,input,host}) => {
             "users": newUsers,
             "gandalf":[true, socket.id]
         }
-        changeState(newState); 
+        changeState(newState);
+        setInProcess(['true', 'ready to end turn']);
     }
 
     function endTurn(){
@@ -412,14 +413,14 @@ const Table = ({socket,input,host}) => {
             <div className='playButtons'>
                 {game.period === 'look at two cards' && <button onClick = {readyUp}>Ready</button>}
 
-                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && inProcess[1] === '' && <button onClick = {takeFromDeck}>Take card from deck</button>}
-                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inProcess[0] && <button onClick = {()=>setInProcess([true,'pile'])}>Take card from pile</button>}
-                {game.period === 'turns started' && isMyTurn(game,socket) && hiddenCards.deck && !inProcess[0] && !game.gandalf[0] && <button onClick = {callGandalf}>Gandalf!</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {takeFromDeck}>Take card from deck</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {()=>setInProcess([true,'pile'])}>Take card from pile</button>}
+                {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && !game.gandalf[0] && <button onClick = {callGandalf}>Gandalf!</button>}
                 
-                {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inProcess[0] &&<button onClick={playCardToPile}>Play Straight to Pile</button>}
-                {game.period === 'turns started' && isMyTurn(game,socket) && !hiddenCards.deck && !inProcess[0] &&<button onClick={()=>setInProcess([true, 'deck'])}>Swap with card from my hand</button>}
+                {inProcess[1] === 'deck card taken' &&<button onClick={playCardToPile}>Play Straight to Pile</button>}
+                {inProcess[1] === 'deck card taken' &&<button onClick={()=>setInProcess([true, 'deck'])}>Swap with card from my hand</button>}
 
-                {inProcess[0] && <h3>click the card you want to swap</h3>}
+                {(inProcess[1] === 'deck' || inProcess[1] === 'pile') && <h3>click the card you want to swap</h3>}
 
                 {inProcess[1] === 'look at own' && <h3>click on one of your own cards you want to see, it will disappear in 10 seconds.</h3>}
 
@@ -428,10 +429,7 @@ const Table = ({socket,input,host}) => {
                 {inProcess[1] === 'pick your card to swap' && <h3>click on one of your own cards you want to swap.</h3>}
                 {inProcess[1] === 'pick their card to swap' && <h3>click on someone elses card you want to swap your card with.</h3>}
 
-                {game.period === 'turns started' && isMyTurn(game,socket) && <button onClick = {endTurn}>End Turn</button>}
-
-                
-                
+                {inProcess[1] === 'ready to end turn' && <button onClick = {endTurn}>End Turn</button>}
             </div>
         </div>
     )
