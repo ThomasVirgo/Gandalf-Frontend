@@ -84,7 +84,7 @@ const Table = ({socket,input,host}) => {
             });
         }
 
-        if (game.gandalf[0] && game.gandalf[1] === game.users[game.turn].id){
+        if (game.gandalf[0] && game.gandalf[1] === game.users[game.turn]?.id){
             setHiddenCards(hiddenCards => ({
                 ...hiddenCards,
                 "clientCards":[false,false,false,false],
@@ -92,19 +92,14 @@ const Table = ({socket,input,host}) => {
                 "player3": [false,false,false,false],
                 "player4": [false,false,false,false],
             }))
-            setInProcess([false,'']);
-            let newState = addPlayerPoints(game);
-            let dummyTurn;
-            if (game.turn === 0){
-                dummyTurn = 1;
-            } else {dummyTurn=0};
+            setInProcess([true,'']);
+            //let newState = addPlayerPoints(game);
             setGame({
-                ...newState,
-                "turn": dummyTurn
-            });
-            //send message to everyone with points etc...
+                ...game,
+                "gandalf":[false, ''],
+                "period":'ready to end round'
+            })
         }
-        
     }, [game, idx])
 
     //note this function is only accessible for the host.
@@ -123,6 +118,19 @@ const Table = ({socket,input,host}) => {
         //emit the game state to the server
         socket.emit('start game', newState);
         console.log('host started game');
+    }
+
+    //note this function is only accessible to the host
+    function endRound(){
+        let newState = addPlayerPoints(game);
+        newState.period = 'ready to start new round';
+        newState.message = 'waiting for host to start next round';
+        changeState(newState);
+    }
+
+    function startNewRound(){
+        //add button that shows when period is 'ready to start new round'
+        console.log('new round started');
     }
 
     function readyUp(){
@@ -215,13 +223,12 @@ const Table = ({socket,input,host}) => {
     }
 
     function changeState(newState){
-        // this function takes the new game state and send it to everyone. Also updates clinet state via setState.
+        // this function takes the new game state and sends it to everyone. Also updates client state via setState.
         setGame(newState)
         socket.emit('state change', newState);
     }
 
     function show(cardIndex, player){
-        
         if (player==='client'){
             let arr = [true,true,true,true];
             arr[cardIndex] = false;
@@ -326,15 +333,18 @@ const Table = ({socket,input,host}) => {
     };
 
     function callGandalf(){
-        let newUsers = [...game.users];
         
         let newState = {
             ...game,
-            "users": newUsers,
             "gandalf":[true, socket.id]
         }
+        if (newState.turn === newState.users.length-1){
+            newState.turn = 0;
+        } else {
+            newState.turn = newState.turn + 1;  
+        }
         changeState(newState);
-        setInProcess(['true', 'ready to end turn']);
+        setInProcess([false, '']);
     }
 
     function endTurn(){
@@ -346,16 +356,15 @@ const Table = ({socket,input,host}) => {
             newState.turn = newState.turn + 1;  
         }
         newState.message = `${newState.users[newState.turn].nickname}'s turn!`
-        setGame(newState);
+        changeState(newState);
         setInProcess([false,'']);
         setHiddenCards(defaultHiddenCards);
-        socket.emit('state change', newState);
     }
 
     // set the cards in game to the current game state;
     let {myCards,player2Cards,player2Name,player3Cards,player3Name,player4Cards,player4Name,deckTop,pileTop}=setCardsToCurrentState(game,socket);
     
-    let myCardElements = (myCards.map((card,index)=><div onClick = {()=>cardClicked('client', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.clientCards[index]}/></div>))
+    let myCardElements = (myCards?.map((card,index)=><div onClick = {()=>cardClicked('client', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.clientCards[index]}/></div>))
     let player2Elements = (player2Cards.map((card,index)=><div onClick = {()=>cardClicked('player2', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.player2[index]}/></div>))
     let player3Elements = (player3Cards.map((card,index)=><div onClick = {()=>cardClicked('player3', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.player3[index]}/></div>))
     let player4Elements = (player4Cards.map((card,index)=><div onClick = {()=>cardClicked('player4', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.player4[index]}/></div>))
@@ -394,6 +403,7 @@ const Table = ({socket,input,host}) => {
             <div className='main-message'>
                 <div id='host-start-button'>
                     {host && game.period === 'waiting for players' && <button onClick = {startGame}>Start Game</button>}
+                    {host && game.period === 'ready to end round' && <button onClick = {endRound}>End round</button>}
                 </div>
                 <div id='instruction-message' className='instruction'>
                     <h4>{game.message}</h4>
