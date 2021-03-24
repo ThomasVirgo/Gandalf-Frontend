@@ -4,7 +4,7 @@ const setCardsToCurrentState = (game, socket) => {
 
     // get your own cards
     let idxList = [0,1,2,3];
-    let myCards = users[myIndex].hand;
+    let myCards = users[myIndex]?.hand;
 
     idxList.splice(myIndex,1);
 

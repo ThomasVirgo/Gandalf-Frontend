@@ -84,16 +84,6 @@ const Table = ({socket,input,host}) => {
             });
         }
 
-        //remove this and add it to endturn function.
-        // if (game.period === 'turns started' && !game.gandalf[0]){
-        //     setHiddenCards(hiddenCards=>{
-        //         return {
-        //             ...hiddenCards,
-        //             "clientCards":[true,true,true,true]
-        //         }
-        //     })
-        // }
-
         if (game.gandalf[0] && game.gandalf[1] === game.users[game.turn].id){
             setHiddenCards(hiddenCards => ({
                 ...hiddenCards,
@@ -115,7 +105,7 @@ const Table = ({socket,input,host}) => {
             //send message to everyone with points etc...
         }
         
-    }, [game])
+    }, [game, idx])
 
     //note this function is only accessible for the host.
     function startGame(){
