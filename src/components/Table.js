@@ -79,7 +79,11 @@ const Table = ({socket,input,host}) => {
             setHiddenCards(hiddenCards => {
                 return {
                     ...hiddenCards,
-                "clientCards":[false, false, true, true] 
+                "clientCards":[false, false, true, true],
+                "player2":[true,true,true,true], 
+                "player3":[true,true,true,true], 
+                "player4":[true,true,true,true],
+                "deck": true 
                 }
             });
         }
@@ -131,6 +135,22 @@ const Table = ({socket,input,host}) => {
     function startNewRound(){
         //add button that shows when period is 'ready to start new round'
         console.log('new round started');
+        let deck = createDeck();
+        let newState = dealCards(game,deck);
+        newState.pile = [];
+        newState.message = 'Remember the two cards that are face up. Then click ready!';
+        newState.period = 'look at two cards';
+        newState.users.forEach(user => user.ready = false);
+        newState.round ++; 
+        if (newState.startIdx === newState.users.length-1){
+            newState.startIdx = 0;
+        } else {
+            newState.startIdx ++;  
+        }
+        newState.turn = newState.startIdx;
+        setInProcess([false, '']);
+        changeState(newState);
+        console.log('the new round started with this state: ', newState);
     }
 
     function readyUp(){
@@ -369,6 +389,7 @@ const Table = ({socket,input,host}) => {
     let player3Elements = (player3Cards.map((card,index)=><div onClick = {()=>cardClicked('player3', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.player3[index]}/></div>))
     let player4Elements = (player4Cards.map((card,index)=><div onClick = {()=>cardClicked('player4', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.player4[index]}/></div>))
     
+    let leaderboard = (game?.users?.map((user)=><div>{user.nickname}: {user.points}</div>));
     return (
         <div className='table-container'>
             <div id='host-cards' className='myCards'>
@@ -404,10 +425,16 @@ const Table = ({socket,input,host}) => {
                 <div id='host-start-button'>
                     {host && game.period === 'waiting for players' && <button onClick = {startGame}>Start Game</button>}
                     {host && game.period === 'ready to end round' && <button onClick = {endRound}>End round</button>}
+                    {host && game.period === 'ready to start new round' && <button onClick = {startNewRound}>Start new round</button>}
                 </div>
                 <div id='instruction-message' className='instruction'>
                     <h4>{game.message}</h4>
                 </div>
+                <div>
+                    <h5>Leaderboard</h5>
+                   {leaderboard}  
+                </div>
+                
             </div>
 
             <div className='playButtons'>

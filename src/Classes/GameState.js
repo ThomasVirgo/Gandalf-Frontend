@@ -11,6 +11,7 @@ class GameState{
         this.period = 'waiting for players';
         this.gandalf = [false, ''];
         this.round = 1;
+        this.startIdx = 0; 
     }
 }
 
