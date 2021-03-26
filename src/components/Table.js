@@ -28,6 +28,7 @@ const Table = ({socket,input,host}) => {
     });
     const [inProcess, setInProcess] = useState([false, '']); // second value is 'deck' or 'pile' depending on which one they want to swap with.
     const [jackSwap, setJackSwap] = useState([]);
+    const [slapSwap, setSlapSwap] = useState([]);
 
     const defaultHiddenCards = {
         "clientCards":[true,true,true,true],
@@ -165,6 +166,7 @@ const Table = ({socket,input,host}) => {
         setHiddenCards(defaultHiddenCards);
         socket.emit('state change', newState);
         checkAllReady(newState);
+        setInProcess([false,'']);
     }
 
     function checkAllReady(state){
@@ -328,6 +330,23 @@ const Table = ({socket,input,host}) => {
             performJackSwap(jackSwap, [card,index,player])
             setInProcess([true, 'ready to end turn']);
         }
+        if (player === 'pile' && !game?.slap[0] && game.users[idx].hand.length > 1){
+            setInProcess([true, 'slap']);
+            let newState = {...game};
+            newState.slap = [true, socket.id];
+            newState.message = `${nickname} has slapped the ${card.value} of ${card.suit}`
+            changeState(newState);
+        }
+        if (inProcess[1] === 'slap' && player !== 'client'){
+            let theirCardArr = [card,index,player];
+            setSlapSwap(theirCardArr);
+            setInProcess([true,'slap correct']);
+        }
+        if (inProcess[1] === 'slap correct' && player === 'client'){
+            let myCardArr = [card,index,player];
+            performSlap(myCardArr, slapSwap);
+            setInProcess([false, '']);
+        }
     };
 
     function performJackSwap(myCardArr, theirCardArr){
@@ -351,6 +370,33 @@ const Table = ({socket,input,host}) => {
         changeState(newState);
         setJackSwap([]);
     };
+
+    function performSlap(myArr, theirArr){
+        let myHand = [...game.users[idx].hand];
+        let myCard = myArr[0];
+        let theirCard = theirArr[0];
+        let theirUserIdx = game.users.findIndex((userObj) => {
+            return userObj.hand.some(entry=>entry.value===theirCard.value && entry.suit === theirCard.suit)
+        });
+        let theirHand = [...game.users[theirUserIdx].hand];
+        let newState= {...game};
+        if (theirCard.value === pileTop.value){
+            newState.pile.push(theirCard);
+            theirHand[theirArr[1]] = myCard;
+            myHand.splice(myArr[1],1); 
+            newState.users[idx].hand = myHand;
+            newState.users[theirUserIdx].hand = theirHand;
+            newState.slap = [false, ''];
+            changeState(newState);
+        } else {
+            newState.users[idx].points += 10;
+            newState.slap = [false, ''];
+            changeState(newState)
+            //they got it wrong
+            //add ten points to their score
+            //resume game
+        }
+    }
 
     function callGandalf(){
         
@@ -389,7 +435,7 @@ const Table = ({socket,input,host}) => {
     let player3Elements = (player3Cards.map((card,index)=><div onClick = {()=>cardClicked('player3', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.player3[index]}/></div>))
     let player4Elements = (player4Cards.map((card,index)=><div onClick = {()=>cardClicked('player4', card, index)} key={index}><Card value = {card.value} suit = {card.suit} hidden = {hiddenCards.player4[index]}/></div>))
     
-    let leaderboard = (game?.users?.map((user)=><div>{user.nickname}: {user.points}</div>));
+    let leaderboard = (game?.users?.map((user,index)=><div key={index}>{user.nickname}: {user.points}</div>));
     return (
         <div className='table-container'>
             <div id='host-cards' className='myCards'>
@@ -417,7 +463,7 @@ const Table = ({socket,input,host}) => {
                     {deckTop&&<Card value={deckTop.value} suit = {deckTop.suit} hidden = {hiddenCards.deck}></Card>}
                 </div>
                 <div className='pile'>
-                    {pileTop&&<Card value={pileTop.value} suit={pileTop.suit} hidden = {false}></Card>}
+                    {pileTop&&<div onClick = {()=>cardClicked('pile', pileTop)}><Card value={pileTop.value} suit={pileTop.suit} hidden = {false}></Card></div>}
                 </div>
             </div>
             
@@ -437,7 +483,7 @@ const Table = ({socket,input,host}) => {
                 
             </div>
 
-            <div className='playButtons'>
+            {!game.slap[0] && <div className='playButtons'>
                 {game.period === 'look at two cards' && <button onClick = {readyUp}>Ready</button>}
 
                 {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {takeFromDeck}>Take card from deck</button>}
@@ -455,8 +501,12 @@ const Table = ({socket,input,host}) => {
 
                 {inProcess[1] === 'pick your card to swap' && <h3>click on one of your own cards you want to swap.</h3>}
                 {inProcess[1] === 'pick their card to swap' && <h3>click on someone elses card you want to swap your card with.</h3>}
-
+                
                 {inProcess[1] === 'ready to end turn' && <button onClick = {endTurn}>End Turn</button>}
+            </div>}
+            <div id='slap options'>
+                {inProcess[1] === 'slap' && <h3>click on someone elses card that you think matches the card on top of the pile.</h3>}
+                {inProcess[1] === 'slap correct' && <h3>click on the card you want to give them</h3>}
             </div>
         </div>
     )

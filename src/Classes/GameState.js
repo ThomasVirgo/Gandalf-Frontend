@@ -12,6 +12,7 @@ class GameState{
         this.gandalf = [false, ''];
         this.round = 1;
         this.startIdx = 0; 
+        this.slap = [false, '']; //second entry is id of person who slapped
     }
 }
 
