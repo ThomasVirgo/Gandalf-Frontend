@@ -47,6 +47,8 @@ const Table = ({socket,input,host}) => {
     if (game.users!==[]){
         idx = game.users.findIndex((entry)=>entry.id === socket.id);  
     }
+
+    let idxMap = ['first', 'second', 'third', 'fourth'];
     
 
     useEffect(()=>{
@@ -152,7 +154,7 @@ const Table = ({socket,input,host}) => {
         newState.turn = newState.startIdx;
         setInProcess([false, '']);
         changeState(newState);
-        console.log('the new round started with this state: ', newState);
+        socket.emit('card played', `Round ${newState.round}. LET THE BATTLE CONTINUE!!`)
     }
 
     function readyUp(){
@@ -222,6 +224,7 @@ const Table = ({socket,input,host}) => {
                 socket.emit('card played', `${nickname} played a jack, and is in process of swapping.`)
                 setInProcess([true, 'pick your card to swap', newState]);
             } else if (cardPlayed.value === 'Q'){
+                socket.emit('card played', `${game.users[newState.turn+1].nickname} was skipped`);
                 //increment turn an extra time, i.e. twice
                 if (newState.users.length === 2){
                     setInProcess([false,""]);
@@ -267,7 +270,6 @@ const Table = ({socket,input,host}) => {
                 [player]:arr,
             })
         }
-        //setInProcess([false, '']);
     }
 
     function swap(cardIndex, deck_or_pile){
@@ -316,8 +318,14 @@ const Table = ({socket,input,host}) => {
         if (inProcess[1] === 'look at own' && player === 'client'){
             show(index, player);
             setInProcess([true, 'ready to end turn']);
+            socket.emit('card played', `${nickname} looked at their ${idxMap[index]} card`);
         }
         if (inProcess[1] === 'look at theirs' && player !== 'client'){
+            let theirUserIdx = game.users.findIndex((userObj) => {
+                return userObj.hand.some(entry=>entry.value===card.value && entry.suit === card.suit)
+            });
+            let theirNickname = game.users[theirUserIdx].nickname;
+            socket.emit('card played', `${nickname} looked at ${theirNickname}'s ${idxMap[index]} card`);
             show(index, player);
             setInProcess([true, 'ready to end turn']);
         }
@@ -379,25 +387,33 @@ const Table = ({socket,input,host}) => {
         //otherwise must have got it correct
         let newState = {...game};
         let myHand = newState.users[idx].hand;
+        let lowestIdx = cardsChosen[0][1];
+        for (let i=0; i<cardsChosen.length; i++){
+            if (cardsChosen[i][1] < lowestIdx){lowestIdx=cardsChosen[i][1]}
+        }
+        let newHand = myHand.filter(card => {
+            return cardsChosen.every(cardArr => cardArr[0].value !== card.value || cardArr[0].suit !== card.suit)
+        });
         if (deck_or_pile === 'deck'){
-            let lowestIdx = cardsChosen[0][1];
-            for (let i=0; i<cardsChosen.length; i++){
-                if (cardsChosen[i][1] < lowestIdx){lowestIdx=cardsChosen[i][1]}
-            }
-            //keep the cards that arent in chosen cards
-            let newHand = myHand.filter(card => {
-                return cardsChosen.every(cardArr => cardArr[0].value !== card.value || cardArr[0].suit !== card.suit)
-            });
             let deckCard = newState.deck.pop();
             newHand.splice(lowestIdx, 0, deckCard); //add card from deck into hand
             cardsChosen.forEach(cardArr=>newState.pile.push(cardArr[0])); //add double or triple to the pile
-            newState.users[idx].hand = newHand;
-            setInProcess([true, 'ready to end turn']);
-            changeState(newState);
-            //show them the deck card they took
-            show(lowestIdx, 'client');
-            setdblTrpl([]);
         }
+        if (deck_or_pile === 'pile'){
+            let pileCard = newState.pile.pop();
+            newHand.splice(lowestIdx, 0, pileCard); //add card from pile into hand
+            cardsChosen.forEach(cardArr=>newState.pile.push(cardArr[0])); //add double or triple to the pile
+        }
+        newState.users[idx].hand = newHand;
+        setInProcess([true, 'ready to end turn']);
+        changeState(newState);
+        //show them the deck card they took
+        show(lowestIdx, 'client');
+        setdblTrpl([]);
+        let multi;
+        if (cardsChosen.length === 2){multi = 'double'}
+        else {multi = 'triple'}
+        socket.emit('card played', `${nickname} played a ${multi} ${cardVal}`);
     }
 
     function performJackSwap(myCardArr, theirCardArr){
@@ -420,6 +436,7 @@ const Table = ({socket,input,host}) => {
         }
         changeState(newState);
         setJackSwap([]);
+        socket.emit('card played', `${nickname} swapped their ${idxMap[myCardArr[1]]} card for ${game.users[theirUserIdx].nickname}'s ${idxMap[theirCardArr[1]]} card`);
     };
 
     function performSlap(myArr, theirArr){
@@ -447,7 +464,6 @@ const Table = ({socket,input,host}) => {
     }
 
     function callGandalf(){
-        
         let newState = {
             ...game,
             "gandalf":[true, socket.id]
@@ -457,8 +473,10 @@ const Table = ({socket,input,host}) => {
         } else {
             newState.turn = newState.turn + 1;  
         }
+        newState.message = `${newState.users[newState.turn].nickname}'s turn!`
         changeState(newState);
         setInProcess([false, '']);
+        socket.emit('card played', `${nickname} has called Gandalf!!!`);
     }
 
     function endTurn(){
@@ -533,39 +551,43 @@ const Table = ({socket,input,host}) => {
                 
             </div>
 
-            {!game.slap[0] && <div className='playButtons'>
-                {game.period === 'look at two cards' && <button onClick = {readyUp}>Ready</button>}
+            <div className='playButtons'>
+            {!game.slap[0] &&<div>
+                    {game.period === 'look at two cards' && <button onClick = {readyUp}>Ready</button>}
 
-                {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {takeFromDeck}>Take card from deck</button>}
-                {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {()=>setInProcess([true,'pile'])}>Take card from pile</button>}
-                {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {()=>setInProcess([true,'double'])}>Play a double</button>}
-                {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {()=>setInProcess([true,'triple'])}>Play a triple</button>}
-                {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && !game.gandalf[0] && <button onClick = {callGandalf}>Gandalf!</button>}
-                
-                {inProcess[1] === 'deck card taken' &&<button onClick={playCardToPile}>Play Straight to Pile</button>}
-                {inProcess[1] === 'deck card taken' &&<button onClick={()=>setInProcess([true, 'deck'])}>Swap with card from my hand</button>}
+                    {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {takeFromDeck}>Take card from deck</button>}
+                    {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {()=>setInProcess([true,'pile'])}>Take card from pile</button>}
+                    {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {()=>setInProcess([true,'double'])}>Play a double</button>}
+                    {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {()=>setInProcess([true,'triple'])}>Play a triple</button>}
+                    {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && !game.gandalf[0] && <button onClick = {callGandalf}>Gandalf!</button>}
+                    
+                    {inProcess[1] === 'deck card taken' &&<button onClick={playCardToPile}>Play Straight to Pile</button>}
+                    {inProcess[1] === 'deck card taken' &&<button onClick={()=>setInProcess([true, 'deck'])}>Swap with card from my hand</button>}
 
-                {(inProcess[1] === 'double chosen' || inProcess[1] === 'triple chosen')&&<button onClick={()=>multiPlayed('deck')}>swap with deck</button>}
-                {(inProcess[1] === 'double chosen' || inProcess[1] === 'triple chosen')&&<button onClick={()=>multiPlayed('pile')}>swap with pile</button>}
+                    {(inProcess[1] === 'double chosen' || inProcess[1] === 'triple chosen')&&<button onClick={()=>multiPlayed('deck')}>swap with deck</button>}
+                    {(inProcess[1] === 'double chosen' || inProcess[1] === 'triple chosen')&&<button onClick={()=>multiPlayed('pile')}>swap with pile</button>}
 
-                {(inProcess[1] === 'deck' || inProcess[1] === 'pile') && <h3>click the card/cards you want to swap</h3>}
-                
-                {inProcess[1] === 'look at own' && <h3>click on one of your own cards you want to see, it will disappear in 10 seconds.</h3>}
+                    {(inProcess[1] === 'deck' || inProcess[1] === 'pile') && <h3>click the card/cards you want to swap</h3>}
+                    
+                    {inProcess[1] === 'look at own' && <h3>click on one of your own cards you want to see, it will disappear in 10 seconds.</h3>}
 
-                {inProcess[1] === 'look at theirs' && <h3>click someone elses card you want to see, it will disappear in 10 seconds.</h3>}
+                    {inProcess[1] === 'look at theirs' && <h3>click someone elses card you want to see, it will disappear in 10 seconds.</h3>}
 
-                {inProcess[1] === 'pick your card to swap' && <h3>click on one of your own cards you want to swap.</h3>}
-                {inProcess[1] === 'pick their card to swap' && <h3>click on someone elses card you want to swap your card with.</h3>}
+                    {inProcess[1] === 'pick your card to swap' && <h3>click on one of your own cards you want to swap.</h3>}
+                    {inProcess[1] === 'pick their card to swap' && <h3>click on someone elses card you want to swap your card with.</h3>}
 
-                {inProcess[1] === 'double' && <h3>click the two cards in your double</h3>}
-                {inProcess[1] === 'triple' && <h3>click the three cards in your triple</h3>}
-                
-                {inProcess[1] === 'ready to end turn' && <button onClick = {endTurn}>End Turn</button>}
-            </div>}
-            <div id='slap options'>
-                {inProcess[1] === 'slap' && <h3>click on someone elses card that you think matches the card on top of the pile.</h3>}
-                {inProcess[1] === 'slap correct' && <h3>click on the card you want to give them</h3>}
+                    {inProcess[1] === 'double' && <h3>click the two cards in your double</h3>}
+                    {inProcess[1] === 'triple' && <h3>click the three cards in your triple</h3>}
+                    
+                    {inProcess[1] === 'ready to end turn' && <button onClick = {endTurn}>End Turn</button>}
+                </div>}
+                <div id='slap options'>
+                    {inProcess[1] === 'slap' && <h3>click on someone elses card that you think matches the card on top of the pile.</h3>}
+                    {inProcess[1] === 'slap correct' && <h3>click on the card you want to give them</h3>}
+                </div>
             </div>
+            
+            
         </div>
     )
 }

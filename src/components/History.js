@@ -31,7 +31,7 @@ const History = ({socket,input,host}) => {
     }
 
     return (
-        <div>
+        <div className='history-container'>
             <h2>Game History</h2>
             <div id='history-log' className='history-log'>
                 {history.map((message, index)=> (
