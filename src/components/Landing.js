@@ -22,7 +22,7 @@ const Landing = ({handleChange, handleSubmit, createNewCode}) => {
                     </label>
                     <label htmlFor='form-element2'>
                         <span>Room Name:</span>
-                        <input id='room' name={room} type='text' onChange={handleChange} placeholder='ask the host for the room name and enter here' required></input>
+                        <input id='room' name={room} type='text' onChange={handleChange} placeholder='enter room name' required></input>
                     </label>
                     {/* <div id='form-element1' className='form-element'>
                         <label htmlFor='nickname1'>Name/Nickname:</label>
@@ -32,7 +32,7 @@ const Landing = ({handleChange, handleSubmit, createNewCode}) => {
                         <label htmlFor='code'>Room Name:</label>
                         <input id='room' name={room} type='text' onChange={handleChange} placeholder='ask the host for the room name and enter here' required></input>
                     </div> */}
-                    <input type='submit' value='click to join' className='btn1'></input>
+                    <button type='submit' className='btn1'>Join Game</button>
                 </form>
             </div>    
 
