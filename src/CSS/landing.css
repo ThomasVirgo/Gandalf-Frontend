@@ -1,28 +1,38 @@
-.landing-main {
-    background-color: black;
+
+.landing-main{
+    display: grid;
     width: 100vw;
     height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    background-color: black;
+    grid-template-areas: 
+    'heading heading'
+    'join create';
+    grid-gap: 0px;
+    grid-template-rows: 20vh 80vh;
+    grid-template-columns: 50vw 50vw;
 }
 
-h1{
-    color: blanchedalmond;
+.landing-heading{
+    grid-area: heading;
+    color:blanchedalmond;
     text-align: center;
 }
 
-h3{
-    text-align: center;
-    margin-bottom: 5px;
-}
-
-.entrance-container {
-    background-color: blueviolet;
-    width: 270px;
-    padding: 20px;
+.join-game{
+    height: 300px;
     border-radius: 10px;
+    grid-area: join;
+    color:white;
+    margin: 10px 30px 100px 30px;
+}
+
+.new-game{
+    height: 300px;
+    border-radius: 10px;
+    grid-area: create;
+    color: white;
+    text-align: center;
+    margin: 10px 30px 100px 30px;
 }
 
 .form-element{
@@ -42,5 +52,25 @@ h3{
     background-color: forestgreen;
 }
 
+.form-container{
+    display: flex;
+    flex-direction: column;
+}
+
+.form-container input{
+    background-color: black;
+    border-bottom: 2px solid black;
+    color: white;
+}
+
+.form-container span{
+    display: inline-block;
+    width:150px;
+}
+
+.form-container input:focus{
+    background-color: none;
+    border-bottom: 2px dashed #D9FFA9;
+}
 
 

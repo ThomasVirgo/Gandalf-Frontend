@@ -131,8 +131,16 @@ const Table = ({socket,input,host}) => {
     //note this function is only accessible to the host
     function endRound(){
         let newState = addPlayerPoints(game);
+        if (newState.round === 5){
+            //game over, pronounce the winner!
+            let users = [...newState.users];
+            users.sort((a,b)=> b.points - a.points);
+            let winner = users.pop();
+            newState.message = `${winner.nickname} wins!!! congratulations :)`
+        } else {
+            newState.message = 'waiting for host to start next round';
+        }
         newState.period = 'ready to start new round';
-        newState.message = 'waiting for host to start next round';
         changeState(newState);
     }
 
@@ -145,7 +153,10 @@ const Table = ({socket,input,host}) => {
         newState.message = 'Remember the two cards that are face up. Then click ready!';
         newState.period = 'look at two cards';
         newState.users.forEach(user => user.ready = false);
-        newState.round ++; 
+        if (newState.round === 5){
+            newState.users.forEach(user => user.points = 0);
+            newState.round = 1;
+        } else {newState.round ++; }
         if (newState.startIdx === newState.users.length-1){
             newState.startIdx = 0;
         } else {
@@ -224,7 +235,14 @@ const Table = ({socket,input,host}) => {
                 socket.emit('card played', `${nickname} played a jack, and is in process of swapping.`)
                 setInProcess([true, 'pick your card to swap', newState]);
             } else if (cardPlayed.value === 'Q'){
-                socket.emit('card played', `${game.users[newState.turn+1].nickname} was skipped`);
+                let theirNickname;
+                if (newState.turn === newState.users.length-1){
+                    theirNickname = newState.users[0].nickname;
+                } else {
+                    let x = newState.turn + 1;
+                    theirNickname = newState.users[x].nickname;  
+                }
+                socket.emit('card played', `${theirNickname} was skipped`);
                 //increment turn an extra time, i.e. twice
                 if (newState.users.length === 2){
                     setInProcess([false,""]);
@@ -343,7 +361,7 @@ const Table = ({socket,input,host}) => {
             setInProcess([true, 'slap']);
             let newState = {...game};
             newState.slap = [true, socket.id];
-            newState.message = `${nickname} has slapped the ${card.value} of ${card.suit}`
+            socket.emit('card played', `${nickname} has slapped the ${card.value} of ${card.suit}`);
             changeState(newState);
         }
         if (inProcess[1] === 'slap' && player !== 'client'){
@@ -370,6 +388,23 @@ const Table = ({socket,input,host}) => {
                     setInProcess([true, 'double chosen']);
                 }
             }
+        } 
+        if (inProcess[1] === 'triple' && player === 'client' && dblTrpl.length<3){
+            let triple = [...dblTrpl];
+            if (triple.length === 0) {
+                triple.push([card,index]);
+                setdblTrpl(triple);
+            } 
+            if (triple.length >= 1){
+                let firstCard = triple[0][0];
+                if (firstCard.value !== card.value || firstCard.suit !== card.suit){
+                    triple.push([card,index]);
+                    setdblTrpl(triple);
+                }
+                if (triple.length===3){
+                    setInProcess([true,'triple chosen']);
+                }
+            }
         }  
     };
 
@@ -381,7 +416,9 @@ const Table = ({socket,input,host}) => {
             let newState = {...game};
             newState.users[idx].points += 10;
             changeState(newState);
+            socket.emit('card played', `${nickname} attempted to play a double/triple but got it wrong. 10 points added ya noob!`);
             endTurn();
+            setdblTrpl([]);
             return
         } 
         //otherwise must have got it correct
@@ -456,10 +493,13 @@ const Table = ({socket,input,host}) => {
             newState.users[theirUserIdx].hand = theirHand;
             newState.slap = [false, ''];
             changeState(newState);
+            let theirNickname = newState.users[theirUserIdx].nickname;
+            socket.emit('card played', `${theirNickname} got slapped by ${nickname}. ${nickname} put his/her ${idxMap[myArr[1]]} card, in ${theirNickname}'s ${idxMap[[theirArr[1]]]} spot.`);
         } else {
             newState.users[idx].points += 10;
             newState.slap = [false, ''];
             changeState(newState)
+            socket.emit('card played', `Slap was incorrect. 10 points has been added to ${nickname}'s score.`);
         }
     }
 
@@ -567,11 +607,11 @@ const Table = ({socket,input,host}) => {
                     {(inProcess[1] === 'double chosen' || inProcess[1] === 'triple chosen')&&<button onClick={()=>multiPlayed('deck')}>swap with deck</button>}
                     {(inProcess[1] === 'double chosen' || inProcess[1] === 'triple chosen')&&<button onClick={()=>multiPlayed('pile')}>swap with pile</button>}
 
-                    {(inProcess[1] === 'deck' || inProcess[1] === 'pile') && <h3>click the card/cards you want to swap</h3>}
+                    {(inProcess[1] === 'deck' || inProcess[1] === 'pile') && <h3>click the card you want to swap</h3>}
                     
-                    {inProcess[1] === 'look at own' && <h3>click on one of your own cards you want to see, it will disappear in 10 seconds.</h3>}
+                    {inProcess[1] === 'look at own' && <h3>click on one of your own cards you want to see.</h3>}
 
-                    {inProcess[1] === 'look at theirs' && <h3>click someone elses card you want to see, it will disappear in 10 seconds.</h3>}
+                    {inProcess[1] === 'look at theirs' && <h3>click someone elses card you want to see.</h3>}
 
                     {inProcess[1] === 'pick your card to swap' && <h3>click on one of your own cards you want to swap.</h3>}
                     {inProcess[1] === 'pick their card to swap' && <h3>click on someone elses card you want to swap your card with.</h3>}
