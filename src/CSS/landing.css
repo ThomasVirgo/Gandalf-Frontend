@@ -19,20 +19,19 @@
 }
 
 .join-game{
-    height: 300px;
-    border-radius: 10px;
     grid-area: join;
     color:#f8f8ff;
     margin: 10px 30px 100px 30px;
+    display: flex;
+    justify-content: center;
 }
 
 .new-game{
-    height: 300px;
-    border-radius: 10px;
     grid-area: create;
     color: #f8f8ff;
-    text-align: center;
     margin: 10px 30px 100px 30px;
+    display: flex;
+    justify-content: center;
 }
 
 .form-element{
@@ -58,7 +57,16 @@
 }
 
 .btn2{
-    background-color: forestgreen;
+    background-color: darkgreen;
+    width: 150px;
+    border-radius: 5px;
+    border: none;
+    margin-top: 20px;
+}
+
+.btn2:hover{
+    cursor: pointer;
+    background-color: greenyellow;
 }
 
 .form-container{
