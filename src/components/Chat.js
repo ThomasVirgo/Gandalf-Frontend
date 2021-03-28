@@ -75,7 +75,6 @@ const Chat = ({socket,input,host}) => {
 
     return (
         <div id='chat-container' className='chat-container'>
-            <h2 className='chat-heading'>Chat</h2>
             <div id='messages' className='messages'>
                 {chatMessages.map((message, index)=> (
                     <div key ={index} style = {styles[message[2]]}>
@@ -87,7 +86,7 @@ const Chat = ({socket,input,host}) => {
             </div>
             <form id='chat-message' onSubmit={sendMessage} className='send-message'>
                 <input type='text' onChange = {inputChange} required placeholder='add a message' className='chatInput' id='chatInput'></input>
-                <input type='submit' value='Send it!' className='chatButton'></input>
+                <input type='submit' value='Send!' className='chatButton'></input>
             </form>
         </div>
     )

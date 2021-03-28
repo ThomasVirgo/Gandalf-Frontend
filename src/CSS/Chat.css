@@ -1,12 +1,15 @@
 .chat-heading{
     color: blueviolet;
     text-align: center;
+    height: 5vh;
+    padding: 0;
+    margin: 0;
 }
 
 .messages{
-    overflow: scroll;
+    overflow-y: scroll;
     margin-bottom: 100px;
-    height: 55vh;
+    height: 60vh;
 }
 
 .send-message{
@@ -14,21 +17,41 @@
     margin-bottom: 0;
     bottom: 0;
     width: 100%;
-    height: 90px;
+    height: 10vh;
 }
 
 .chatInput{
-    height: 90px;
-    width: 25vw;
+    height: 10vh;
+    width: 24vw;
     font-size: large;
+    outline: none;
+    border: none;
+    background-color: black;
+    color: white;
+    font-size: clamp(15px, 2vmin, 20px);
 }
 
 .chatButton{
-    height:100px;
-    width: 130px;
+    height: 5vh;
+    width: 5vw;
+    outline: none;
+    border: 2px solid black;
+    border-radius: 10px;
+    background-color: darkgreen;
+}
+
+.chatButton:hover{
+    background-color: green;
+    cursor: pointer;
 }
 
 .message-name{
     color: black;
     font-weight: bold;
+    font-size: clamp(10px, 2vmin, 15px);
 }
+
+.message-content{
+    font-size: clamp(10px, 2vmin, 15px);
+}
+

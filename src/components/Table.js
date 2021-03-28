@@ -582,13 +582,8 @@ const Table = ({socket,input,host}) => {
                     <button onClick = {showProcessState}>Show Process State</button>
                 </div>
                 <div id='instruction-message' className='instruction'>
-                    <h4>{game.message}</h4>
+                    <h3 className='instruction-message'>{game.message}</h3>
                 </div>
-                <div>
-                    <h5>Leaderboard</h5>
-                   {leaderboard}  
-                </div>
-                
             </div>
 
             <div className='playButtons'>

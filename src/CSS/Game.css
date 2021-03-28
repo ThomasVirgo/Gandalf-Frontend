@@ -4,11 +4,11 @@
     background:cornsilk;
     display: grid;
     grid-template-areas:
-        'table table table history'
-        'table table table chat'
-        'table table table chat';
+        'table history'
+        'table chat';
     grid-gap: 0px;
-    grid-template-rows: 30vh 30vh 40vh;
+    grid-template-rows: 30vh 70vh;
+    grid-template-columns: 70vw 30vw;
 }
 
 .history{

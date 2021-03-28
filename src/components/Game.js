@@ -25,4 +25,5 @@ const Game = ({socket,input,host}) => {
     )
 }
 
+
 export default Game;

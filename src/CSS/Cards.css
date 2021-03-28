@@ -24,6 +24,7 @@
 
 .h1-suit{
     margin:0;
+    text-align: center;
 }
 
 .card-bottom{
@@ -36,4 +37,12 @@
 
 .value-black {
     color: black;
+}
+
+@media screen and (max-height: 800px){
+    .card-container{
+        width:35px;
+        height: 49px;
+        font-size: 10px;
+    }
 }
