@@ -4,7 +4,7 @@ class GameState{
     constructor(room, nickname, id){
         this.room=room;
         this.turn = 0;
-        this.message = 'waiting for host to start the game...';
+        this.message = `waiting for host to start the game. Room name is '${this.room}'`;
         this.users = [new User(nickname, id)];
         this.deck = [];
         this.pile = [];

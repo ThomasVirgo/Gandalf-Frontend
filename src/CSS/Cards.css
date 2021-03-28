@@ -5,7 +5,7 @@
     margin: 0px;
     padding: 5px;
     border-radius: 3px;
-    border: white solid 3px;
+    border: darkred solid 3px;
     box-shadow: 1px 1px 5px #000;
 }
 
@@ -41,8 +41,8 @@
 
 @media screen and (max-height: 800px){
     .card-container{
-        width:35px;
-        height: 49px;
+        width:34px;
+        height: 45px;
         font-size: 10px;
     }
 }

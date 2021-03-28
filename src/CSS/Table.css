@@ -51,7 +51,23 @@
 
 .playButtons {
     grid-area: playButtons;
-    background-color: blueviolet;
+    /* background-color: blueviolet; */
+    display: flex;
+    justify-content: center;
+}
+
+.playButtons button{
+    background-color: #005253;
+    border-radius: 5px;
+    border: none;
+    margin-top: 20px;
+    color: white;
+    margin: 5px;
+}
+
+.playButtons button:hover{
+    cursor: pointer;
+    background-color: darkturquoise;
 }
 
 .rotate-clockwise{
@@ -64,11 +80,16 @@
 
 .main-message {
     grid-area: instruction;
-    background-color: cadetblue;
+    /* background-color: cadetblue; */
     display: flex;
+    justify-content: center;
 }
 
 .instruction-message{
     margin:0;
     padding: 0;
+    text-align: center;
+    color: blanchedalmond;
 }
+
+

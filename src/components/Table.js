@@ -574,21 +574,16 @@ const Table = ({socket,input,host}) => {
             </div>
             
             <div className='main-message'>
-                <div id='host-start-button'>
-                    {host && game.period === 'waiting for players' && <button onClick = {startGame}>Start Game</button>}
-                    {host && game.period === 'ready to end round' && <button onClick = {endRound}>End round</button>}
-                    {host && game.period === 'ready to start new round' && <button onClick = {startNewRound}>Start new round</button>}
-                    <button onClick = {showGameState}>Show Game State</button>
-                    <button onClick = {showProcessState}>Show Process State</button>
-                </div>
-                <div id='instruction-message' className='instruction'>
-                    <h3 className='instruction-message'>{game.message}</h3>
-                </div>
+                <h3 className='instruction-message'>{game.message}</h3>
             </div>
 
             <div className='playButtons'>
             {!game.slap[0] &&<div>
-                    {game.period === 'look at two cards' && <button onClick = {readyUp}>Ready</button>}
+                    {host && game.period === 'waiting for players' && <button onClick = {startGame}>Start Game</button>}
+                    {host && game.period === 'ready to end round' && <button onClick = {endRound}>End round</button>}
+                    {host && game.period === 'ready to start new round' && <button onClick = {startNewRound}>Start new round</button>}
+
+                    {game.period === 'look at two cards' && <button onClick = {readyUp} className='btn1'>Ready</button>}
 
                     {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {takeFromDeck}>Take card from deck</button>}
                     {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {()=>setInProcess([true,'pile'])}>Take card from pile</button>}

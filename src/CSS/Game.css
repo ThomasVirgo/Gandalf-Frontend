@@ -1,7 +1,7 @@
 .grid-container{
     width:100vw;
     height:100vh;
-    background:cornsilk;
+    background-color:#232b2b;
     display: grid;
     grid-template-areas:
         'table history'
@@ -23,5 +23,5 @@
 
 .table {
     grid-area: table;
-    background-color: darkgray;
+    /* background-color: darkgray; */
 }
