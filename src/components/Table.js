@@ -254,14 +254,16 @@ const Table = ({socket,input,host}) => {
                     if (newState.turn === 0){
                         newState.turn = 2;
                     } else {
-                        newState.turn -= 1;
+                        newState.turn = newState.turn - 1;
                     }
+                    setInProcess([false, ""]);
                 } else if (newState.users.length === 4){
                     if (newState.turn < 2){
-                        newState.turn += 2;
+                        newState.turn = newState.turn + 2;
                     } else {
-                        newState.turn -= 2;
+                        newState.turn = newState.turn - 2;
                     }
+                    setInProcess([false, ""]);
                 }    
             }
         } else {
