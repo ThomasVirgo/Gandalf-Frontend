@@ -229,7 +229,7 @@ const Table = ({socket,input,host}) => {
             "deck":true
         })
 
-        let magicCards = ['7','8', '9', '10', 'J', 'Q'];
+        let magicCards = ['7','8', '9', '10', 'J']; //got rid of queen as was causing bug. Need to fix.
         if (magicCards.indexOf(cardPlayed.value)!==-1){
             if (cardPlayed.value === '7' || cardPlayed.value === '8'){
                 setInProcess([true, 'look at own']); 
