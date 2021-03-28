@@ -83,6 +83,7 @@
     /* background-color: cadetblue; */
     display: flex;
     justify-content: center;
+    
 }
 
 .instruction-message{
@@ -90,6 +91,21 @@
     padding: 0;
     text-align: center;
     color: blanchedalmond;
+}
+
+
+.btn{
+    background-color: #005253;
+    border-radius: 5px;
+    border: none;
+    color: white;
+    margin-left: 30px;
+    margin-top: 5px;
+}
+
+.btn:hover{
+    cursor: pointer;
+    background-color: darkturquoise;
 }
 
 

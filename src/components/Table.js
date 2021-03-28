@@ -7,6 +7,7 @@ import dealCards from '../Utils/DealCards';
 import Card from './Card';
 import setCardsToCurrentState from '../Utils/setCards';
 import {isMyTurn, addPlayerPoints} from '../Utils/gameStateFunctions';
+import Leaderboard from './Leaderboard';
 
 
 
@@ -30,6 +31,7 @@ const Table = ({socket,input,host}) => {
     const [jackSwap, setJackSwap] = useState([]);
     const [slapSwap, setSlapSwap] = useState([]);
     const [dblTrpl, setdblTrpl] = useState([]);
+    const [leaderboardOpen, setLeaderboardOpen] = useState(false);
 
     const defaultHiddenCards = {
         "clientCards":[true,true,true,true],
@@ -39,8 +41,8 @@ const Table = ({socket,input,host}) => {
         "deck": true,
     };
 
-    function showGameState(){console.log(game)};
-    function showProcessState(){console.log(inProcess)};
+    //function showGameState(){console.log(game)};
+    //function showProcessState(){console.log(inProcess)};
     
 
     let idx;
@@ -102,9 +104,11 @@ const Table = ({socket,input,host}) => {
             }))
             setInProcess([true,'']);
             //let newState = addPlayerPoints(game);
+            let newGandalf = [...game.gandalf];
+            newGandalf[0]=false;
             setGame({
                 ...game,
-                "gandalf":[false, ''],
+                "gandalf":newGandalf,
                 "period":'ready to end round'
             })
         }
@@ -575,7 +579,10 @@ const Table = ({socket,input,host}) => {
             
             <div className='main-message'>
                 <h3 className='instruction-message'>{game.message}</h3>
+                <div><button onClick = {()=>setLeaderboardOpen(true)} className='btn'>Show Leaderboard</button></div>
             </div>
+
+            <Leaderboard open = {leaderboardOpen} onClose = {()=>setLeaderboardOpen(false)} leaderboard = {leaderboard}></Leaderboard>
 
             <div className='playButtons'>
             {!game.slap[0] &&<div>
@@ -590,6 +597,7 @@ const Table = ({socket,input,host}) => {
                     {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {()=>setInProcess([true,'double'])}>Play a double</button>}
                     {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && <button onClick = {()=>setInProcess([true,'triple'])}>Play a triple</button>}
                     {game.period === 'turns started' && isMyTurn(game,socket) && !inProcess[0] && !game.gandalf[0] && <button onClick = {callGandalf}>Gandalf!</button>}
+                    
                     
                     {inProcess[1] === 'deck card taken' &&<button onClick={playCardToPile}>Play Straight to Pile</button>}
                     {inProcess[1] === 'deck card taken' &&<button onClick={()=>setInProcess([true, 'deck'])}>Swap with card from my hand</button>}

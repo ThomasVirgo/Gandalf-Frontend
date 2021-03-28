@@ -8,7 +8,7 @@ const Landing = ({handleChange, handleSubmit, createNewCode}) => {
     const nickname = 'nickname';
     const newRoom = 'newRoom';
 
-    //console.log(socket);
+    
 
     return (
         <div id='landing' className='landing-main'>
@@ -24,7 +24,7 @@ const Landing = ({handleChange, handleSubmit, createNewCode}) => {
                         <span>Room Name:</span>
                         <input id='room' name={room} type='text' onChange={handleChange} placeholder='enter room name' required></input>
                     </label>
-                    <button type='submit' className='btn1'>Join Game</button>
+                    <button type='submit' className='btn1'>Join game</button>
                 </form>
             </div>    
 
